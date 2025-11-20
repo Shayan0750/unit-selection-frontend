@@ -1,6 +1,6 @@
 # Unit Selection Frontend
 
-Frontend for the Unit Selection system built with **HTML**, **CSS**, and **JavaScript** (no framework).
+Frontend for the Unit Selection system project.
 
 ## How to Run It
 
