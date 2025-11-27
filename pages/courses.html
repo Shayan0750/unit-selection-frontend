@@ -1,23 +1,67 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard — Unit Selection</title>
-  <link rel="stylesheet" href="/css/style.css" />
+  <title>مدیریت دروس</title>
+  <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
+  <header class="header">
+    <div class="brand">پنل انتخاب واحد — مدیریت</div>
+    <div class="header-controls">
+      <button class="menu-toggle" id="toggleSidebar" aria-label="باز/بستن منو">☰</button>
+      <div class="small">مدیر سیستم</div>
+      <button class="btn btn-outline">خروج</button>
+    </div>
+  </header>
 
-    <div id="header-placeholder"></div>
+  <aside class="sidebar" id="sidebar">
+    <nav>
+      <ul class="nav">
+        <li><a href="dashboard.html" id="link-dashboard">داشبورد</a></li>
+        <li><a href="courses.html" id="link-courses">مدیریت دروس</a></li>
+      </ul>
+    </nav>
+  </aside>
 
-    <main class="main-container">
-        <section class="card">
-            <p>This is the Course Management Page.</p>
-        </section>
-    </main>
+  <main class="main">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+        <div>
+          <h1>مدیریت دروس</h1>
+        </div>
+        <div>
+          <button class="btn btn-primary">درج درس جدید</button>
+        </div>
+      </div>
 
-    <div id="footer-placeholder"></div>
-  
-    <script src="/js/layout.js"></script>
+      <div style="margin-top:1rem;">
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>کد</th>
+                <th>عنوان</th>
+                <th>واحد</th>
+                <th>استاد</th>
+                <th>عملیات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="btn btn-outline">ویرایش</button></td></tr>
+              <tr><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="btn btn-outline">ویرایش</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="small">© دانشگاه — سیستم انتخاب واحد</div>
+  </footer>
+
+  <script src="../js/courses.js"></script>
 </body>
 </html>
