@@ -7,23 +7,8 @@
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-  <header class="header">
-    <div class="brand">پنل انتخاب واحد — مدیریت</div>
-    <div class="header-controls">
-      <button class="menu-toggle" id="toggleSidebar" aria-label="باز/بستن منو">☰</button>
-      <div class="small">مدیر سیستم</div>
-      <button class="btn btn-outline">خروج</button>
-    </div>
-  </header>
-
-  <aside class="sidebar" id="sidebar">
-    <nav>
-      <ul class="nav">
-        <li><a href="dashboard.html" id="link-dashboard">داشبورد</a></li>
-        <li><a href="courses.html" id="link-courses">مدیریت دروس</a></li>
-      </ul>
-    </nav>
-  </aside>
+  <div data-include="../partials/header.html"></div>
+  <div data-include="../partials/sidebar.html"></div>
 
   <main class="main">
     <div class="card">
@@ -58,10 +43,9 @@
     </div>
   </main>
 
-  <footer class="footer">
-    <div class="small">© دانشگاه — سیستم انتخاب واحد</div>
-  </footer>
+  <div data-include="../partials/footer.html"></div>
 
   <script src="../js/courses.js"></script>
+  <script src="../js/layout.js"></script>
 </body>
 </html>
