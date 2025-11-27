@@ -1,33 +1,36 @@
-(function($) {
-    "use strict";
+(function () {
+  function init() {
 
-    $('.login-form').submit(function(e) {
-        e.preventDefault();
+    const form = document.querySelector('.login-form');
+    if (!form) return;
 
-        var usernameInput = $('input[type="text"]');
-        var passwordInput = $('input[type="password"]');
-        var username = usernameInput.val().trim();
-        var password = passwordInput.val().trim();
+    const user = form.querySelector('input[type="text"]');
+    const pass = form.querySelector('input[type="password"]');
+    const userErr = form.querySelector('.error-msg-username');
+    const passErr = form.querySelector('.error-msg-password');
 
-        // پاک کردن پیام‌های قبلی
-        $('.error-msg-username').text('');
-        $('.error-msg-password').text('');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      userErr && (userErr.textContent = '');
+      passErr && (passErr.textContent = '');
 
-        var hasError = false;
+      const u = (user && user.value || '').trim();
+      const p = (pass && pass.value || '').trim();
 
-        if(username === '') {
-            $('.error-msg-username').text('لطفا نام کاربری را وارد کنید');
-            hasError = true;
-        }
+      if (!u || !p) {
+        if (!u) userErr && (userErr.textContent = 'لطفا نام کاربری را وارد کنید');
+        if (!p) passErr && (passErr.textContent = 'لطفا رمز عبور را وارد کنید');
+        return;
+      }
 
-        if(password === '') {
-            $('.error-msg-password').text('لطفا رمز عبور را وارد کنید');
-            hasError = true;
-        }
-
-        if(!hasError) {
-            alert('فرم درست است، ادامه دهید');
-        }
+      // valid — replace this with real login logic
+      alert('فرم درست است، ادامه دهید');
     });
+  }
 
-})(jQuery);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
