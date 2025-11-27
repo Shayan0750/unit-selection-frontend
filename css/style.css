@@ -8462,6 +8462,9 @@ a:hover { text-decoration: underline; }
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 .sidebar .nav li { margin-bottom: .45rem; }
 .sidebar .nav a {
