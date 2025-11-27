@@ -1,24 +1,55 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard — Unit Selection</title>
-  <link rel="stylesheet" href="/css/style.css" />
+  <title>داشبورد</title>
+  <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
+  <header class="header">
+    <div class="brand">پنل انتخاب واحد — مدیریت</div>
+    <div class="header-controls">
+      <button class="menu-toggle" id="toggleSidebar" aria-label="باز/بستن منو">☰</button>
+      <div class="small">مدیر سیستم</div>
+      <button class="btn btn-outline">خروج</button>
+    </div>
+  </header>
 
-    <div id="header-placeholder"></div>
+  <aside class="sidebar" id="sidebar">
+    <nav>
+      <ul class="nav">
+        <li><a href="dashboard.html" id="link-dashboard">داشبورد</a></li>
+        <li><a href="courses.html" id="link-courses">مدیریت دروس</a></li>
+      </ul>
+    </nav>
+  </aside>
 
-    <main class="main-container">
-        <section class="card">
-            <h1>Welcome</h1>
-            <p>This is the dashboard.</p>
-        </section>
-    </main>
+  <main class="main">
+    <div class="card">
+      <h1>نمای کلی</h1>
 
-    <div id="footer-placeholder"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:1rem;">
+        <div class="card">
+          <h3>تعداد دروس</h3>
+          <p class="small">—</p>
+        </div>
+        <div class="card">
+          <h3>تعداد دانشجویان</h3>
+          <p class="small">—</p>
+        </div>
+        <div class="card">
+          <h3>اعلان‌ها</h3>
+          <p class="small">—</p>
+        </div>
+      </div>
+    </div>
+  </main>
 
-    <script src="/js/layout.js"></script>
+  <footer class="footer">
+    <div class="small">سیستم انتخاب واحد</div>
+  </footer>
+
+  <script src="../js/dashboard.js"></script>
 </body>
 </html>
