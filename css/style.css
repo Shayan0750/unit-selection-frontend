@@ -8614,3 +8614,6 @@ label { display: block; margin-bottom: .35rem; font-weight: 600; }
   outline: none;
 }
 
+div, section, main, header, footer, article, aside, nav, form, fieldset,h1,h2,h3,h4,h5,h6, p, li, label, th, td {
+  text-align: right;
+}
