@@ -8367,7 +8367,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  direction: rtl;            /* مهم: راست‌به‌چپ */
+  direction: rtl;
   font-family: sans-serif, "Vazirmatn", "IRANSans", "Segoe UI", Roboto, Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -8384,38 +8384,93 @@ a:hover { text-decoration: underline; }
 /* کوچک‌نمایی متون کم‌اهمیت */
 .small { font-size: .92rem; color: var(--muted); }
 
-/* هدر ثابت */
+/* ===== هدر: کنترل‌ها چسبیده به سمت چپ، برند دقیقاً وسط ===== */
 .header {
   position: fixed;
   top: 0;
   right: 0;
   left: 0;
   height: var(--header-h);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 calc(var(--gap) * 1.25);
-  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-  border-bottom: 1px solid rgba(0,0,0,0.03);
+  display: block; /* از flex کلی برای جلوگیری از تداخل با positioning مطلق استفاده می‌کنیم */
+  padding: 0;
   z-index: 1000;
+  background: linear-gradient(180deg, #8D448B, #7a3b78);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  position: relative;
 }
 
-/* برند در هدر */
+/* کانتینر داخلی برای نگهداری چپ/راست با padding مثل قبلی */
+.header-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* این برای مرکز کردن محتوای میانی است */
+  padding: 0 calc(var(--gap) * 1.25);
+  position: relative;
+}
+
+/* برند در هدر (کاملاً وسط) */
 .brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-weight: 700;
   font-size: 1.05rem;
   letter-spacing: .2px;
+  white-space: nowrap;
+  color: #fff;
+  pointer-events: none; /* تا موقع کلیک روی آیتم‌های چپ/راست تداخل نکند */
 }
 
-/* کنترل‌های سمت چپ هدر */
+/* کنترل‌ها دقیقاً در سمت چپ قرار می‌گیرند */
 .header-controls {
+  position: absolute;
+  left: calc(var(--gap) * 1.25); /* فاصله از لبهٔ چپ مشابه padding */
+  top: 0;
+  height: var(--header-h);
   display: flex;
-  gap: .6rem;
   align-items: center;
+  gap: .6rem;
+  z-index: 1100;
 }
 
-/* دکمه‌های ساده */
+/* متن مدیر سیستم سفید و مرتب */
+.header-controls .small {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #fff;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* آیکون خروج */
+.header-controls a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.05rem;
+  transition: all .15s ease;
+}
+.header-controls a:hover {
+  background: rgba(255,255,255,0.28);
+  transform: translateY(-1px);
+}
+
+/* responsive: در موبایل ممکن است متن را مخفی کنیم */
+@media (max-width: 768px) {
+  .header-controls .small { display: none; }
+  .header-controls { left: 0.6rem; }
+}
+
+
+/* دکمه‌های عمومی */
 .btn {
   display: inline-block;
   padding: .46rem .72rem;
@@ -8436,23 +8491,22 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 6px 18px rgba(141,68,139,0.12);
 }
 
-/* outline (سبک ثانویه) */
 .btn-outline {
   background: transparent;
   border: 1px solid rgba(0,0,0,0.06);
 }
 
-/* سایدبار ثابت (سمت راست) */
+/* سایدبار */
 .sidebar {
   position: fixed;
-  top: var(--header-h);
+  top: 0;
   right: 0;
   width: var(--sidebar-w);
-  bottom: var(--footer-h);
+  bottom: 0;
   padding: calc(var(--gap) * 0.9);
-  background: var(--card);
+  padding-top: var(--header-h);
+  background: var(--primary);
   box-shadow: var(--shadow);
-  border-left: 1px solid rgba(0,0,0,0.03);
   overflow: auto;
   z-index: 900;
 }
@@ -8464,31 +8518,28 @@ a:hover { text-decoration: underline; }
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-.sidebar .nav li { margin-bottom: .45rem; }
-.sidebar .nav a {
-  display: block;
-  padding: .58rem .7rem;
-  border-radius: 8px;
-  color: var(--text);
-  font-weight: 600;
-  transition: background .12s ease, color .12s ease;
-}
-.sidebar .nav a:hover {
-  background: rgba(141,68,139,0.05);
-}
-.sidebar .nav a.active {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(141,68,139,0.09);
 }
 
-/* بخش پایینِ سایدبار برای اطلاعات کم */
-.sidebar .meta {
-  margin-top: .8rem;
-  font-size: .95rem;
-  color: var(--muted);
+.sidebar .nav li {
+  margin-bottom: 0; 
+  border-bottom: 1px solid rgba(255,255,255,0.3); /* خط جداکننده بین لینک‌ها */
+}
+
+.sidebar .nav a {
+  display: block;
+  padding: .8rem .7rem;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .2s ease;
+  border-radius: 6px;
+}
+
+.sidebar .nav a:hover {
+  background: #956094; /* رنگ هاور دلخواه */
+}
+.sidebar .nav li:first-child {
+  margin-top: 1rem; /* فاصله از بالای سایدبار */
 }
 
 /* محتوأ اصلی */
@@ -8509,11 +8560,11 @@ a:hover { text-decoration: underline; }
   border: 1px solid rgba(0,0,0,0.03);
 }
 
-/* سرصفحهٔ کارتی */
+/* سرصفحه کارتی */
 .card h2 { margin: 0 0 .4rem 0; font-size: 1.15rem; }
 .card h3 { margin: 0 0 .35rem 0; font-size: 1rem; }
 
-/* شبکهٔ کارت‌ها (قابل استفاده در داشبورد) */
+/* شبکه کارت‌ها */
 .grid-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -8521,7 +8572,7 @@ a:hover { text-decoration: underline; }
   align-items: stretch;
 }
 
-/* جعبهٔ آمار داخل داشبورد */
+/* جعبهٔ آمار */
 .stat {
   padding: .9rem;
   border-radius: 10px;
@@ -8551,11 +8602,9 @@ a:hover { text-decoration: underline; }
 }
 
 /* ستون عملیات (دکمه‌ها) */
-.table .actions button {
-  margin-left: .35rem;
-}
+.table .actions button { margin-left: .35rem; }
 
-/* فرم‌ها / اینپوت‌ها ساده */
+/* فرم‌ها */
 .form-control {
   display: block;
   width: 100%;
@@ -8590,7 +8639,7 @@ label { display: block; margin-bottom: .35rem; font-weight: 600; }
 .text-muted { color: var(--muted); }
 .hr { height: 1px; background: rgba(0,0,0,0.04); margin: .8rem 0; border-radius: 2px; }
 
-/* آیکون/نماد ساده کنار لینک (اختیاری) */
+/* آیکون/نماد کنار لینک */
 .nav-icon {
   display: inline-block;
   width: 28px;
@@ -8599,15 +8648,14 @@ label { display: block; margin-bottom: .35rem; font-weight: 600; }
   opacity: .85;
 }
 
-/* جزئیات زیباسازی */
 /* افکت hover روی کارت‌ها */
-.card:hover {
+/*.card:hover {
   transform: translateY(-4px);
   transition: transform .18s ease;
   box-shadow: 0 18px 50px rgba(10,14,20,0.06);
-}
+} */
 
-/* سایهٔ مناسب برای دکمه‌های مهم */
+/* سایه دکمه‌های مهم */
 .btn-primary:active, .btn-primary:focus {
   transform: translateY(0);
   box-shadow: 0 8px 28px rgba(141,68,139,0.12);
