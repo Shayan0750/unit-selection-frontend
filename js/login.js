@@ -1,27 +1,21 @@
-const form = document.getElementById("loginForm");
-const usernameEl = document.getElementById("username");
-const passwordEl = document.getElementById("password");
-const warningEl = document.getElementById("warning");
+  const form = document.querySelector('.login-form');
+  const user = form.querySelector('input[type="text"]');
+  const pass = form.querySelector('input[type="password"]');
+  const uErr = form.querySelector('.error-msg-username');
+  const pErr = form.querySelector('.error-msg-password');
 
-function showWarning(text) {
-  warningEl.textContent = text;
-  warningEl.hidden = false;
-}
+  // Handle login form submit
+  form.addEventListener('submit', e => {
+    e.preventDefault();
 
-function hideWarning() {
-  warningEl.hidden = true;
-  warningEl.textContent = "";
-}
+    uErr.textContent = '';
+    pErr.textContent = '';
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  hideWarning();
+    const u = user.value.trim();
+    const p = pass.value.trim();
 
-  const username = usernameEl.value.trim();
-  const password = passwordEl.value.trim();
+    if (!u) uErr.textContent = 'لطفا نام کاربری را وارد کنید';
+    if (!p) pErr.textContent = 'لطفا رمز عبور را وارد کنید';
 
-  if (!username || !password) {
-    showWarning("Please fill in all fields.");
-    return;
-  }
-});
+    if (u && p) alert('فرم درست است، ادامه دهید');
+  });
