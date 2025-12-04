@@ -1,13 +1,18 @@
-<header class="header">
-  <div class="header-inner">
-    <div class="brand">سامانه انتخاب واحد</div>
-
-    <div class="header-controls">
-      <div class="small">مدیر سیستم</div>
-      <a href="logout.html" title="خروج"><i class="bi bi-box-arrow-right"></i></a>
+<header class="site-header" role="banner">
+  <div class="brand">
+    <div class="logo">🎓</div>
+    <div class="brand-text">
+      <div class="title">Unit Selection</div>
     </div>
-    <!-- اگر خواستی آیتم‌های سمت راست اضافه کنی، می‌تونی اینجا بذاری -->
   </div>
+
+    <nav class="topnav" role="navigation" aria-label="Main navigation">
+      <a href="/pages/dashboard.html" class="nav-link" data-route="dashboard">Dashboard</a>
+      <a href="/pages/courses.html" class="nav-link" data-route="courses">Course Management</a>
+    </nav>
+
+    <div class="user-area">
+      <span id="currentUser"></span>
+      <button id="logoutBtn" class="btn ghost">Logout</button>
+    </div>
 </header>
-
-
