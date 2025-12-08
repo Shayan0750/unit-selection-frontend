@@ -7,6 +7,23 @@
     }, d);
   });
 
+  function addCourseToTable(course) {
+    const tbody = document.getElementById("coursesTable");
+    if (!tbody) return;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td>${course.code}</td>
+        <td>${course.title}</td>
+        <td>${course.units}</td>
+        <td>${course.department}</td>
+        <td><button class="btn btn-outline">ویرایش</button></td>
+    `;
+    // اضافه کردن درس جدید در بالای جدول
+    tbody.prepend(tr);
+}
+
+
   const init = async () => {
     const modal = await waitFor('#courseModal');
     const form  = await waitFor('#courseForm');
@@ -61,6 +78,14 @@
 
         const data = await res.json().catch(()=>null);
         if (msg) msg.textContent = 'ثبت با موفقیت انجام شد.';
+setTimeout(close, 700);
+
+        addCourseToTable({
+          code: payload.code,
+          title: payload.title,
+          units: payload.units,
+          department: payload.department
+      });
         // اگر جدول دارید، اضافه کن (اختیاری)
         const tbody = document.querySelector('#coursesTable tbody');
         if (tbody) {
