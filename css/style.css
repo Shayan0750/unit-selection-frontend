@@ -8688,3 +8688,23 @@ button, .btn, li { text-align: center; }
 .form-msg { display: none; margin-top: .6rem; text-align: right; }
 .form-msg.show { display: block; }
 #errCode, #errTitle, #errCredits { margin-top: .35rem; text-align: right; }
+
+.btn-edit {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+.btn-edit:hover {
+  background: #0069d9;
+  border-color: #0062cc;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+.btn-delete:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
