@@ -8667,3 +8667,24 @@ div, section, main, header, footer, article, aside, nav, form, fieldset,h1,h2,h3
 }
 
 button, .btn, li { text-align: center; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.36);
+  z-index: 1200;
+}
+.modal-backdrop.hide { display: none; }
+
+.modal-card { width: 520px; max-width: 92%; padding: 1rem; }
+
+/* دکمه‌های داخل فرم راست‌چین */
+.form-actions { display: flex; gap: .6rem; justify-content: flex-end; margin-top: .6rem; }
+
+/* پیام فرم و خطاها */
+.form-msg { display: none; margin-top: .6rem; text-align: right; }
+.form-msg.show { display: block; }
+#errCode, #errTitle, #errCredits { margin-top: .35rem; text-align: right; }
