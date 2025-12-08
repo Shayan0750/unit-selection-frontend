@@ -20,7 +20,7 @@
     const clearErrs = () => ['errCode','errTitle','errCredits','errGroup'].forEach(id => setErr(id,''));
 
     const openBtn = fld('addBtn'), cancelBtn = fld('cancelCourseBtn'), msg = fld('formMsg');
-    const api = '/api/courses'; //endpoint
+    const api = 'http://127.0.0.1:8000/api/courses/';
 
     const validate = () => {
       clearErrs();
