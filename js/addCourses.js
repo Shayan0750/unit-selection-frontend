@@ -1,114 +1,135 @@
+// ../js/addCourses.js — minimal create-course (uses fetchWithAuth, no noisy console errors)
 (() => {
+  const API = "http://127.0.0.1:8000/api/courses/";
+  const REFRESH = "http://127.0.0.1:8000/api/token/refresh/";
   const $ = s => document.querySelector(s);
-  const waitFor = (sel, tries = 20, d = 80) => new Promise(r => {
-    let i = 0, t = setInterval(() => {
-      const e = document.querySelector(sel);
-      if (e || ++i >= tries) { clearInterval(t); r(e); }
-    }, d);
-  });
 
-  function addCourseToTable(course) {
+  // --- auth helper (attach Bearer and refresh once) ---
+  function tokens(){ return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') }; }
+  async function refreshAccess(){
+    const t = tokens(); if(!t.refresh) return null;
+    try{
+      const r = await fetch(REFRESH, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ refresh: t.refresh }) });
+      if(!r.ok) return null;
+      const j = await r.json().catch(()=>null);
+      if(j && j.access){ localStorage.setItem('access', j.access); if(j.refresh) localStorage.setItem('refresh', j.refresh); return j.access; }
+    } catch(e) { /* silent */ }
+    return null;
+  }
+  async function fetchWithAuth(url, opts = {}, retry = true){
+    opts.headers = opts.headers || {};
+    const t = tokens(); if (t.access) opts.headers['Authorization'] = 'Bearer ' + t.access;
+    let res = await fetch(url, opts);
+    if (res.status !== 401) return res;
+    if (!retry) return res;
+    const newAccess = await refreshAccess();
+    if (!newAccess) return res;
+    opts.headers['Authorization'] = 'Bearer ' + newAccess;
+    return fetch(url, opts);
+  }
+
+  // --- UI helpers ---
+  function addCourseToTable(course){
     const tbody = document.getElementById("coursesTable");
-    if (!tbody) return;
-
+    if(!tbody) return;
+    const code = course.code ?? "";
     const tr = document.createElement("tr");
+    tr.dataset.code = code;
     tr.innerHTML = `
-        <td>${course.code}</td>
-        <td>${course.title}</td>
-        <td>${course.units}</td>
-        <td>${course.department}</td>
-        <td><button class="btn btn-outline">ویرایش</button></td>
+      <td>${code}</td>
+      <td>${course.title ?? ""}</td>
+      <td>${course.units ?? course.credits ?? ""}</td>
+      <td>${course.department ?? course.group ?? ""}</td>
+      <td>
+        <button class="btn btn-outline btn-edit" type="button" data-code="${code}">ویرایش</button>
+        <button class="btn btn-outline btn-delete" type="button" data-code="${code}">حذف</button>
+      </td>
     `;
-    // اضافه کردن درس جدید در بالای جدول
     tbody.prepend(tr);
-}
+  }
 
+  // --- form logic ---
+  async function init(){
+    const modal = document.getElementById("courseModal");
+    const form = document.getElementById("courseForm");
+    if(!form) return;
 
-  const init = async () => {
-    const modal = await waitFor('#courseModal');
-    const form  = await waitFor('#courseForm');
-    if (!form || !modal) return;
+    const codeEl = document.getElementById("courseCode");
+    const titleEl = document.getElementById("courseTitle");
+    const groupEl = document.getElementById("courseGroup");
+    const creditsEl = document.getElementById("courseCredits");
+    const msg = document.getElementById("formMsg");
+    const openBtn = document.getElementById("addBtn");
+    const cancelBtn = document.getElementById("cancelCourseBtn");
 
-    const fld = id => document.getElementById(id);
-    const code = fld('courseCode'), title = fld('courseTitle'),
-          credits = fld('courseCredits'), teacher = fld('courseTeacher'),
-          group = fld('courseGroup');
-    const setErr = (id, txt) => { const e = fld(id); if (e) e.textContent = txt; };
-    const clearErrs = () => ['errCode','errTitle','errCredits','errGroup'].forEach(id => setErr(id,''));
+    function clearErrors(){
+      ["errCode","errTitle","errGroup","errCredits"].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ""; });
+    }
 
-    const openBtn = fld('addBtn'), cancelBtn = fld('cancelCourseBtn'), msg = fld('formMsg');
-    const api = 'http://127.0.0.1:8000/api/courses/';
+    function open(){
+      form.reset && form.reset();
+      clearErrors();
+      if(msg){ msg.textContent = ""; }
+      modal && modal.classList.remove("hide");
+      setTimeout(()=> codeEl && codeEl.focus(), 40);
+    }
+    function close(){
+      modal && modal.classList.add("hide");
+    }
 
-    const validate = () => {
-      clearErrs();
-      let ok = true;
-      if (!code || !code.value.trim()) { setErr('errCode','کد درس را وارد کنید.'); ok = false; }
-      if (!title || !title.value.trim()) { setErr('errTitle','عنوان درس را وارد کنید.'); ok = false; }
-      const cr = credits ? Number(credits.value) : NaN;
-      if (!Number.isFinite(cr) || cr <= 0) { setErr('errCredits','تعداد واحد معتبر وارد کنید.'); ok = false; }
-      if (!group || !group.value.trim()) { setErr('errGroup','گروه درسی را وارد کنید.'); ok = false; }
-      return ok;
-    };
-
-    const close = () => modal.classList.add('hide');
-    const open  = () => { form.reset && form.reset(); clearErrs(); msg && (msg.classList.remove('show'), msg.textContent=''); modal.classList.remove('hide'); setTimeout(()=> code && code.focus(),50); };
-
-    form.addEventListener('submit', async e => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
-      if (!validate()) return;
-      const payload = {
-        code: code.value.trim(),
-        title: title.value.trim(),
-        units: Number(credits.value),
-        department: Number(group.value)
-      };
+      clearErrors();
+      const code = (codeEl.value||"").trim();
+      const title = (titleEl.value||"").trim();
+      const group = (groupEl.value||"").trim();
+      const units = Number(creditsEl.value);
 
-      // show pending UI
-      if (msg) { msg.textContent = 'در حال ارسال...'; msg.classList.add('show'); }
+      let ok = true;
+      if(!code){ document.getElementById("errCode").textContent = "کد درس را وارد کنید."; ok=false }
+      if(!title){ document.getElementById("errTitle").textContent = "عنوان درس را وارد کنید."; ok=false }
+      if(!group){ document.getElementById("errGroup").textContent = "گروه درسی را وارد کنید."; ok=false }
+      if(!Number.isFinite(units) || units <= 0){ document.getElementById("errCredits").textContent = "تعداد واحد معتبر وارد کنید."; ok=false }
+      if(!ok) return;
+
+      const payload = { code, title, units, department: group };
+
+      if(msg){ msg.textContent = "در حال ارسال..."; }
 
       try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (window.AUTH_TOKEN) headers['Authorization'] = 'Bearer ' + window.AUTH_TOKEN;
-        const res = await fetch(api, { method: 'POST', headers, body: JSON.stringify(payload) });
+        const res = await fetchWithAuth(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-        if (!res.ok) {
-          const err = await res.json().catch(()=>null);
-          throw new Error((err && err.message) || `خطا: ${res.status}`);
+        // handle responses cleanly — DO NOT throw to console
+        if (res.ok) {
+          const created = await res.json().catch(()=>null);
+          addCourseToTable(created || payload);
+          if(msg){ msg.textContent = "درج با موفقیت انجام شد."; setTimeout(()=> msg.textContent = "",700); }
+          setTimeout(close, 700);
+          // optionally refresh list or re-bind buttons elsewhere
+          return;
         }
 
-        const data = await res.json().catch(()=>null);
-        if (msg) msg.textContent = 'ثبت با موفقیت انجام شد.';
-setTimeout(close, 700);
-
-        addCourseToTable({
-          code: payload.code,
-          title: payload.title,
-          units: payload.units,
-          department: payload.department
-      });
-        // اگر جدول دارید، اضافه کن (اختیاری)
-        const tbody = document.querySelector('#coursesTable tbody');
-        if (tbody) {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${escape(payload.code)}</td><td>${escape(payload.title)}</td><td>${escape(payload.credits)}</td><td>${escape(payload.teacher||'—')}</td><td><button class="btn btn-outline">ویرایش</button></td>`;
-          tbody.prepend(row);
-        }
-        setTimeout(close, 700);
+        // non-ok (including 401) — show user-friendly message, do not log stack
+        let body = await res.json().catch(()=>null);
+        const serverMsg = (body && (body.detail || body.message)) || `خطا: ${res.status}`;
+        if(msg) msg.textContent = serverMsg;
       } catch (err) {
-        if (msg) msg.textContent = (err.message || 'خطای شبکه');
-        console.error(err);
+        // network or unexpected error — show friendly message, keep console quiet
+        if(msg) msg.textContent = "خطای شبکه یا ارتباط";
       }
     });
 
-    if (openBtn) openBtn.addEventListener('click', e => (e.preventDefault(), open()));
-    if (cancelBtn) cancelBtn.addEventListener('click', e => (e.preventDefault(), close()));
-    modal.addEventListener('click', e => { if (e.target === modal) close(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.classList.contains('hide')) close(); });
+    openBtn && openBtn.addEventListener("click", e => { e.preventDefault(); open(); });
+    cancelBtn && cancelBtn.addEventListener("click", e => { e.preventDefault(); close(); });
 
-    // small helper
-    function escape(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-  };
+    // optional: close modal by backdrop / ESC
+    modal && modal.addEventListener("click", e => { if(e.target === modal) close(); });
+    document.addEventListener("keydown", e => { if(e.key === "Escape") close(); });
+  }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
+  document.addEventListener("DOMContentLoaded", init);
 })();
