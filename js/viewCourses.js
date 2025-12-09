@@ -1,3 +1,4 @@
+// ../js/viewCourses.js — minimal: list + edit + delete using course code in URLs
 (() => {
   const API = "http://127.0.0.1:8000/api/courses/";
   const REFRESH = "http://127.0.0.1:8000/api/token/refresh/";
@@ -28,7 +29,7 @@
     return fetch(url, opts);
   }
 
-  /* render list */
+  /* load list (uses course.code as identifier) */
   async function loadCourses(){
     const tbody = $("#coursesTable"); if(!tbody) return;
     tbody.innerHTML = "<tr><td colspan=5>در حال بارگذاری...</td></tr>";
@@ -36,24 +37,23 @@
       const res = await fetchWithAuth(API);
       if(!res.ok){ tbody.innerHTML = `<tr><td colspan=5>خطا (${res.status})</td></tr>`; return; }
       const data = await res.json();
-      if(!Array.isArray(data) || data.length === 0){ tbody.innerHTML = "<tr><td colspan=5>هیچ درسی ثبت نشده است.</td></tr>"; return; }
+      if(!Array.isArray(data) || data.length===0){ tbody.innerHTML = "<tr><td colspan=5>هیچ درسی ثبت نشده است.</td></tr>"; return; }
       tbody.innerHTML = "";
       data.forEach(c => {
-        const id = c.id ?? c.pk ?? "";
-        const tr = document.createElement("tr"); tr.dataset.id = id;
+        const code = c.code ?? "";
+        const tr = document.createElement("tr"); tr.dataset.code = code;
         tr.innerHTML = `
-          <td>${esc(c.code)}</td>
-          <td>${esc(c.title)}</td>
+          <td>${esc(code)}</td>
+          <td>${esc(c.title ?? "")}</td>
           <td>${esc(c.units ?? c.credits ?? "")}</td>
           <td>${esc(c.department ?? c.group ?? "")}</td>
           <td>
-            <button class="btn btn-outline btn-edit" type="button" data-id="${id}">ویرایش</button>
-            <button class="btn btn-outline btn-delete" type="button" data-id="${id}">حذف</button>
+            <button class="btn btn-outline btn-edit" type="button" data-code="${esc(code)}">ویرایش</button>
+            <button class="btn btn-outline btn-delete" type="button" data-code="${esc(code)}">حذف</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
-      // handlers
       tbody.querySelectorAll(".btn-edit").forEach(b => b.addEventListener("click", onEditClick));
       tbody.querySelectorAll(".btn-delete").forEach(b => b.addEventListener("click", onDeleteClick));
     } catch (err) {
@@ -65,17 +65,17 @@
   /* edit */
   async function onEditClick(e){
     const btn = e.currentTarget;
-    const id = btn.dataset.id || btn.closest("tr")?.dataset?.id;
-    if(!id) return console.warn("missing id");
+    const code = btn.dataset.code || btn.closest("tr")?.dataset?.code;
+    if(!code) return console.warn("missing code");
     try{
-      const res = await fetchWithAuth(API + id + "/");
+      const res = await fetchWithAuth(API + encodeURIComponent(code) + "/");
       if(!res.ok) throw new Error(res.status);
       const c = await res.json();
       $("#courseCode").value = c.code ?? "";
       $("#courseTitle").value = c.title ?? "";
       $("#courseGroup").value = c.department ?? c.group ?? "";
       $("#courseCredits").value = c.units ?? c.credits ?? "";
-      const form = $("#courseForm"); if(form) form.dataset.editId = id;
+      const form = $("#courseForm"); if(form) form.dataset.editCode = code;
       $("#modalTitle") && ($("#modalTitle").textContent = "ویرایش درس");
       $("#saveCourseBtn") && ($("#saveCourseBtn").textContent = "بروزرسانی");
       $("#courseModal") && $("#courseModal").classList.remove("hide");
@@ -86,8 +86,8 @@
   async function onFormSubmit(e){
     e.preventDefault();
     const form = e.target;
-    const id = form.dataset.editId;
-    if(!id) return;
+    const originalCode = form.dataset.editCode;
+    if(!originalCode) return;
     const code = ($("#courseCode")?.value||"").trim();
     const title = ($("#courseTitle")?.value||"").trim();
     const dept = ($("#courseGroup")?.value||"").trim();
@@ -101,19 +101,27 @@
 
     const payload = { code, title, units, department: dept };
     try {
-      const res = await fetchWithAuth(API + id + "/", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const res = await fetchWithAuth(API + encodeURIComponent(originalCode) + "/", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
       if(!res.ok){
         const body = await res.json().catch(()=>null);
         throw new Error((body && (body.detail||body.message)) || `HTTP ${res.status}`);
       }
-      const tr = document.querySelector(`#coursesTable tr[data-id="${id}"]`);
+      // update row: find row by original code and update dataset/code buttons
+      const tr = document.querySelector(`#coursesTable tr[data-code="${CSS.escape(originalCode)}"]`) || Array.from(document.querySelectorAll('#coursesTable tr')).find(r => r.dataset.code === originalCode);
       if(tr){
+        tr.dataset.code = code;
         tr.children[0].textContent = payload.code;
         tr.children[1].textContent = payload.title;
         tr.children[2].textContent = String(payload.units);
         tr.children[3].textContent = payload.department;
+        // update buttons' data-code
+        tr.querySelectorAll('button[data-code]').forEach(b => b.dataset.code = code);
       }
-      delete form.dataset.editId;
+      delete form.dataset.editCode;
       $("#modalTitle") && ($("#modalTitle").textContent = "درج درس جدید");
       $("#saveCourseBtn") && ($("#saveCourseBtn").textContent = "ثبت");
       const msg = $("#formMsg"); if(msg){ msg.textContent = "بروزرسانی انجام شد."; setTimeout(()=> msg.textContent = "",800); }
@@ -127,14 +135,13 @@
   /* delete */
   async function onDeleteClick(e){
     const btn = e.currentTarget;
-    const id = btn.dataset.id || btn.closest("tr")?.dataset?.id;
-    if(!id) return console.warn("missing id");
+    const code = btn.dataset.code || btn.closest("tr")?.dataset?.code;
+    if(!code) return console.warn("missing code");
     if(!confirm("آیا از حذف این درس مطمئن هستید؟")) return;
     try {
-      const res = await fetchWithAuth(API + id + "/", { method: "DELETE" });
+      const res = await fetchWithAuth(API + encodeURIComponent(code) + "/", { method: "DELETE" });
       if (res.status === 204 || res.ok) {
-        const tr = btn.closest("tr");
-        tr && tr.remove();
+        btn.closest("tr")?.remove();
       } else {
         const body = await res.json().catch(()=>null);
         throw new Error((body && (body.detail||body.message)) || `HTTP ${res.status}`);
