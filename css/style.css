@@ -8708,3 +8708,130 @@ button, .btn, li { text-align: center; }
   background: #c82333;
   border-color: #bd2130;
 }
+
+/*
+ * استایل‌های تکمیل کننده برای مودال و فرم افزودن/ویرایش بخش
+ */
+
+/* استایل backdrop (برای اطمینان از قرارگیری در مرکز) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5); /* کمی تیره تر برای تاکید بیشتر */
+  z-index: 1200;
+  transition: opacity 0.3s ease; /* انیمیشن نرم‌تر */
+}
+
+.modal-backdrop.hide { 
+  display: none; 
+  opacity: 0;
+}
+.modal-backdrop:not(.hide) {
+    opacity: 1;
+}
+
+
+/* استایل کارت اصلی مودال */
+.modal-card {
+  width: 550px; /* کمی بزرگتر برای فیلدهای بیشتر */
+  max-width: 90%;
+  background-color: var(--white, #fff);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  padding: 30px;
+  z-index: 1201;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.modal-backdrop:not(.hide) .modal-card {
+    transform: scale(1);
+}
+
+/* استایل عنوان */
+.modal-card h3 {
+  color: var(--primary, #007bff);
+  border-bottom: 2px solid var(--light, #f8f9fa);
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* استایل فرم و فیلدها */
+#sectionForm label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: var(--gray-dark, #343a40);
+}
+
+#sectionForm input[type="text"],
+#sectionForm input[type="number"],
+#sectionForm select {
+  width: 100%;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border: 1px solid var(--gray-400, #ced4da);
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box; /* اطمینان از عرض درست */
+}
+
+#sectionForm input[type="text"]:focus,
+#sectionForm input[type="number"]:focus,
+#sectionForm select:focus {
+  border-color: var(--primary, #007bff);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+/* پیام‌های خطا */
+#formMsg {
+  padding: 10px;
+  background-color: var(--danger, #dc3545);
+  color: var(--white, #fff);
+  border-radius: 4px;
+  margin-bottom: 15px;
+  display: block;
+  text-align: center;
+}
+
+/* استایل دکمه‌های فرم */
+.form-actions {
+  display: flex;
+  justify-content: flex-end; /* دکمه‌ها به سمت چپ (در RTL) بروند */
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.form-actions .btn {
+  padding: 10px 20px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+#saveSectionBtn {
+  background-color: var(--success, #28a745);
+  color: var(--white, #fff);
+}
+
+#saveSectionBtn:hover {
+  background-color: #218838;
+}
+
+#cancelSectionBtn {
+  background-color: var(--secondary, #6c757d);
+  color: var(--white, #fff);
+}
+
+#cancelSectionBtn:hover {
+  background-color: #5a6268;
+}
