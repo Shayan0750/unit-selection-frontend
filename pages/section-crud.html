@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>section crud</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <div data-include="../partials/header.html"></div>
+
+    <aside class="sidebar" id="sidebarFragment">
+        <nav>
+            <ul class="nav">
+                <li><a href="admin-dashboard.html" data-link="dashboard">داشبورد</a></li>
+                <li><a href="admin-crud.html" data-link="courses">مدیریت دروس</a></li>
+                <li><a href="section-crud.html" data-link="section">section</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="header-actions">
+            <button class="btn btn-primary" id="addSectionBtn">افزودن بخش جدید</button>
+        </div>
+
+        <div id="sections-list-container">
+        </div>
+        <div class="modal-backdrop hide" id="sectionModal">
+            <div class="modal-card">
+                <h3><span id="modal-title">افزودن بخش درسی جدید</span></h3>
+                <p id="formMsg" style="color: red;"></p>
+
+                <form id="sectionForm">
+                    <label for="course-select">درس:</label>
+                    <select id="course-select" name="course_code" required>
+                        <option value="">انتخاب درس...</option>
+                    </select>
+
+                    <label for="instructor-select">استاد:</label>
+                    <select id="instructor-select" name="instructor_id" required>
+                        <option value="">انتخاب استاد...</option>
+                    </select>
+
+                    <label for="term-select">ترم:</label>
+                    <select id="term-select" name="term_id" required>
+                        <option value="">انتخاب ترم...</option>
+                    </select>
+
+                    <label for="capacity-input">ظرفیت:</label>
+                    <input type="number" id="capacity-input" name="capacity" min="1" required>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success" id="saveSectionBtn">ذخیره</button>
+                        <button type="button" class="btn btn-secondary" id="cancelSectionBtn">لغو</button>
+                    </div>
+
+                    <input type="hidden" name="section_id" id="section-id">
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- footer placeholder -->
+    <div data-include="../partials/footer.html"></div>
+
+    <script src="../js/dashboard.js"></script>
+    <script src="../js/layout.js"></script>
+</body>
+
+</html>
