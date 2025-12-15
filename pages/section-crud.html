@@ -67,6 +67,38 @@
                     <label for="capacity-input">ظرفیت:</label>
                     <input type="number" id="capacity-input" name="capacity" min="1" required>
 
+                    <fieldset class="form-fieldset">
+                        <legend>زمان‌بندی‌های برگزاری</legend>
+                        <div id="meetings-container">
+                        </div>
+                        <button type="button" class="btn btn-outline" id="addMeetingBtn" style="margin-top: 10px;">+
+                            افزودن زمان‌بندی</button>
+                    </fieldset>
+
+                    <template id="meetingRowTemplate">
+                        <div class="meeting-row"
+                            style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+                            <div style="flex-grow: 1;">
+                                <label>اتاق</label>
+                                <input type="text" name="room_id" maxlength="3" required>
+                            </div>
+                            <div style="width: 150px;">
+                                <label>روز</label>
+                                <select name="day" required>
+                                </select>
+                            </div>
+                            <div style="width: 150px;">
+                                <label>ساعت</label>
+                                <select name="time_slot" required>
+                                </select>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-danger remove-meeting-btn"
+                                    style="height: 38px; width: 38px; line-height: 1;">×</button>
+                            </div>
+                        </div>
+                    </template>
+
                     <div class="form-actions">
                         <button type="submit" class="btn btn-success" id="saveSectionBtn">ذخیره</button>
                         <button type="button" class="btn btn-secondary" id="cancelSectionBtn">لغو</button>
