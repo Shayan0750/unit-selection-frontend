@@ -8473,23 +8473,22 @@ a:hover { text-decoration: underline; }
   line-height: 1;
 }
 
-/* آیکون خروج */
+/* آیکون خروج بدون پس‌زمینه */
 .header-controls a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.35rem 0.5rem;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.18);
+  display: inline-block;       /* فقط اندازه خود آیکون */
+  padding: 0;                  /* حذف فضای اضافی */
+  background: none;            /* حذف رنگ و حلقه */
   color: #fff;
   text-decoration: none;
   font-size: 1.05rem;
-  transition: all .15s ease;
+  transition: transform 0.15s ease; /* فقط تکان کوچک */
 }
+
+/* هاور: تکان کوچک روی آیکون */
 .header-controls a:hover {
-  background: rgba(255,255,255,0.28);
-  transform: translateY(-1px);
+  transform: translateY(-2px); /* تکان کوچک به سمت بالا */
 }
+
 
 /* responsive: در موبایل ممکن است متن را مخفی کنیم */
 @media (max-width: 768px) {
@@ -8736,3 +8735,12 @@ button, .btn, li { text-align: center; }
   background: #c82333;
   border-color: #bd2130;
 }
+
+#userRoleLabel {
+  font-size: 0.7rem !important;        /* اندازه کوچک‌تر */
+  font-weight: 300 !important;         /* سبک‌تر، اگر Light فونت موجود باشد */
+  font-family: 'Shabnam', sans-serif !important; /* فونت شبنم */
+  line-height: 1;                       /* ارتفاع خط مناسب */
+}
+
+
