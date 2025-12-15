@@ -1,28 +1,40 @@
-(async function () {
-  const base = '/partials';
-  const load = async name => (await fetch(`${base}/${name}.html`)).text().catch(() => '');
-  
-  // inject header/footer
-  document.getElementById('header-placeholder').innerHTML = await load('header');
-  document.getElementById('footer-placeholder').innerHTML = await load('footer');
+(function(){
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
 
-  const userEl = document.getElementById('currentUser');
-  const user = localStorage.getItem('loggedInUser') || 'Not signed in';
-  if (userEl) userEl.textContent = user;
+  async function loadIncludes(){
+    const nodes = $$('[data-include]');
+    await Promise.all(nodes.map(async node => {
+      try {
+        const res = await fetch(node.dataset.include);
+        node.innerHTML = res.ok ? await res.text() : `<!-- include failed: ${res.status} ${node.dataset.include} -->`;
+      } catch (err) {
+        node.innerHTML = `<!-- include failed: ${err.message} -->`;
+      }
+    }));
+    initParts();
+  }
 
-  // highlight active nav link
-  const page = location.pathname.split('/').pop();
-  document.querySelectorAll('.nav-link').forEach(a => a.classList.toggle(
-    'active',
-    a.getAttribute('href').split('/').pop() === page || (page === '' && a.getAttribute('href').endsWith('dashboard.html'))
-  ));
+  function initParts(){
+    const file = (location.pathname.split('/').pop() || 'dashboard.html');
+    const name = file.replace('.html','');
 
-  // logout button
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) logoutBtn.onclick = () => {
-    localStorage.removeItem('loggedInUser');
-    location.href = '/pages/login.html';
-  };
+    // mark active link (tries data-link first, then href)
+    $$('.sidebar a').forEach(a => {
+      const linkName = a.dataset.link || a.getAttribute('href') || '';
+      a.classList.toggle('active', linkName === name || linkName === file);
+    });
 
-  
+    // sidebar toggle
+    const toggle = $('#toggleSidebar') || $('.menu-toggle');
+    const sidebar = $('#sidebar') || $('#sidebarFragment') || $('.sidebar');
+    if (toggle && sidebar) toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    // logout (placeholder)
+    const logout = $('#logoutBtn');
+    if (logout) logout.addEventListener('click', () => console.log('logout clicked (implement auth/logout logic)'));
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadIncludes);
+  else loadIncludes();
 })();

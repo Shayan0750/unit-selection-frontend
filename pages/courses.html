@@ -1,23 +1,89 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard — Unit Selection</title>
-  <link rel="stylesheet" href="/css/style.css" />
+  <title>مدیریت دروس</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 
-    <div id="header-placeholder"></div>
+  <div data-include="../partials/header.html"></div>
+  <div data-include="../partials/sidebar.html"></div>
 
-    <main class="main-container">
-        <section class="card">
-            <p>This is the Course Management Page.</p>
-        </section>
-    </main>
+  <main class="main">
+    <div class="card">
 
-    <div id="footer-placeholder"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h1>مدیریت دروس</h1>
+        <button id="addBtn" class="btn btn-primary">درج درس جدید</button>
+      </div>
+
+      <!-- Modal -->
+      <div id="courseModal" class="modal-backdrop hide">
+        <div class="card modal-card">
+          <h3>درج درس جدید</h3>
+
+          <form id="courseForm" autocomplete="off" novalidate>
+            <div class="form-group">
+              <label for="courseCode">کد درس *</label>
+              <input id="courseCode" class="form-control" />
+              <div id="errCode" class="text-danger small"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="courseTitle">عنوان درس *</label>
+              <input id="courseTitle" class="form-control" />
+              <div id="errTitle" class="text-danger small"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="courseGroup">گروه درسی *</label>
+              <input id="courseGroup" class="form-control" />
+              <div id="errGroup" class="text-danger small"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="courseCredits">تعداد واحد *</label>
+              <input id="courseCredits" type="number" min="1" class="form-control" />
+              <div id="errCredits" class="text-danger small"></div>
+            </div>
+
+            <div class="form-actions">
+              <button id="cancelCourseBtn" type="button" class="btn btn-outline">انصراف</button>
+              <button id="saveCourseBtn" type="submit" class="btn btn-primary">ثبت</button>
+            </div>
+
+            <div id="formMsg" class="form-msg small"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="margin-top:1rem;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>کد</th>
+              <th>عنوان</th>
+              <th>واحد</th>
+              <th>گروه</th>
+              <th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody id="coursesTable"></tbody>
+        </table>        
+      </div>
+    </div>
+  </main>
+
+  <div data-include="../partials/footer.html"></div>
+
   
-    <script src="/js/layout.js"></script>
+  <script src="../js/viewCourses.js"></script>
+  <script src="../js/addCourses.js"></script>
+  <script src="../js/layout.js"></script>
 </body>
 </html>
+

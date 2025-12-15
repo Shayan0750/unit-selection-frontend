@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خروج از سیستم</title>
+    <link rel="stylesheet" href="../css/logout.css">
+</head>
+<body>
+    <div class="message">
+        در حال خروج از سیستم...
+    </div>
+
+    <script>
+        // پاک کردن توکن‌ها
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+
+        // بعد از 1 ثانیه هدایت به صفحه login
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 1000);
+    </script>
+</body>
+</html>
