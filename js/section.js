@@ -1,5 +1,7 @@
 (() => {
-    // ثابت‌ها و توابع کمکی
+    // ===================================
+    // ثابت‌ها، توابع کمکی و Enums
+    // ===================================
     const API_BASE_URL = "http://127.0.0.1:8000/api/";
     const SECTIONS_API = API_BASE_URL + "sections/";
     const COURSES_LIST_API = API_BASE_URL + "courses/list/";
@@ -7,17 +9,30 @@
     const TERMS_API = API_BASE_URL + "terms/";
     const REFRESH_URL = API_BASE_URL + "token/refresh/";
 
+    // Enums مطابق با Schema شما
+    const DayEnum = [
+        { code: 'SA', name: 'شنبه' }, { code: 'SU', name: 'یکشنبه' },
+        { code: 'MO', name: 'دوشنبه' }, { code: 'TU', name: 'سه‌شنبه' },
+        { code: 'WE', name: 'چهارشنبه' }, { code: 'TH', name: 'پنجشنبه' },
+        { code: 'FR', name: 'جمعه' }
+    ];
+    const TimeSlotEnum = [
+        { code: '8-10', name: '۰۸:۰۰ – ۱۰:۰۰' }, { code: '10-12', name: '۱۰:۰۰ – ۱۲:۰۰' },
+        { code: '12-14', name: '۱۲:۰۰ – ۱۴:۰۰' }, { code: '14-16', name: '۱۴:۰۰ – ۱۶:۰۰' },
+        { code: '16-18', name: '۱۶:۰۰ – ۱۸:۰۰' }
+    ];
+
     const $ = s => document.querySelector(s);
-    const $$ = s => document.querySelectorAll(s); // اضافه شده
     const esc = s => String(s == null ? "" : s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
-    // متغیرهای سراسری برای نگهداری داده‌ها
-    let dropdownData = {}; // داده‌های لیست‌های کشویی
-    let allSections = []; // لیست تمام بخش‌ها
+    let dropdownData = {};
+    let allSections = [];
 
-    // توابع احراز هویت (مطابق با viewCourses.js)
+    // توابع Auth (فرض می‌شود که fetchWithAuth و refreshAccess همانند قبل کار می‌کنند)
     function tokens() { return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') }; }
 
+    // ... (توابع fetchWithAuth و refreshAccess همانند کد قبلی شما) ...
+    // [BEGIN fetchWithAuth and refreshAccess functions - Keep them from the previous correct version]
     async function refreshAccess() {
         const t = tokens(); if (!t.refresh) return null;
         try {
@@ -49,8 +64,50 @@
         }
         return res;
     }
+    // [END fetchWithAuth and refreshAccess functions]
 
-    // توابع مودال و فرم
+
+    // ===================================
+    // توابع مودال، فرم و Meetings
+    // ===================================
+
+    // تابع کمکی: ساخت یک ردیف جدید زمان‌بندی
+    function createMeetingRow(meeting = {}) {
+        const template = $('#meetingRowTemplate');
+        if (!template) return;
+
+        const row = template.content.cloneNode(true);
+        const container = row.querySelector('.meeting-row');
+
+        // پر کردن فیلدهای روز و ساعت
+        const daySelect = container.querySelector('select[name="day"]');
+        const timeSelect = container.querySelector('select[name="time_slot"]');
+
+        DayEnum.forEach(d => {
+            daySelect.innerHTML += `<option value="${esc(d.code)}">${esc(d.name)}</option>`;
+        });
+        TimeSlotEnum.forEach(t => {
+            timeSelect.innerHTML += `<option value="${esc(t.code)}">${esc(t.name)}</option>`;
+        });
+
+        // پر کردن داده‌ها در حالت ویرایش
+        if (meeting.room_id) {
+            container.querySelector('input[name="room_id"]').value = meeting.room_id;
+            daySelect.value = meeting.day;
+            timeSelect.value = meeting.time_slot;
+            // اگر ID وجود داشت آن را در یک input hidden برای ویرایش ذخیره می‌کنیم
+            if (meeting.id) {
+                container.innerHTML += `<input type="hidden" name="meeting_id" value="${esc(meeting.id)}">`;
+            }
+        }
+
+        // اتصال دکمه حذف
+        container.querySelector('.remove-meeting-btn').addEventListener('click', (e) => {
+            e.currentTarget.closest('.meeting-row')?.remove();
+        });
+
+        return row;
+    }
 
     function openSectionModal(mode = 'add', sectionData = {}) {
         const modal = $("#sectionModal");
@@ -62,13 +119,29 @@
         $("#modal-title").textContent = (mode === 'add') ? 'افزودن بخش درسی جدید' : 'ویرایش بخش';
         $("#sectionForm").dataset.mode = mode;
 
+        // پاک کردن ردیف‌های زمان‌بندی قدیمی
+        const meetingsContainer = $('#meetings-container');
+        meetingsContainer.innerHTML = '';
+
         if (mode === 'edit' && sectionData.id) {
             $("#section-id").value = sectionData.id;
-            // توجه: فیلدهای Select باید با مقادیر value (کد یا ID) پر شوند
-            $("#course-select").value = sectionData.course_code;
-            $("#instructor-select").value = sectionData.instructor_id;
-            $("#term-select").value = sectionData.term_id;
+            $("#course-select").value = sectionData.course; // توجه: از 'course' استفاده می‌کنیم
+            $("#instructor-select").value = sectionData.instructor;
+            $("#term-select").value = sectionData.term;
             $("#capacity-input").value = sectionData.capacity;
+
+            // پر کردن ردیف‌های زمان‌بندی
+            if (sectionData.meetings && sectionData.meetings.length > 0) {
+                sectionData.meetings.forEach(m => {
+                    meetingsContainer.appendChild(createMeetingRow(m));
+                });
+            } else {
+                // اگر ویرایش است و میتینگ ندارد، یک ردیف خالی اضافه شود
+                meetingsContainer.appendChild(createMeetingRow());
+            }
+        } else {
+            // در حالت افزودن، یک ردیف خالی اضافه شود
+            meetingsContainer.appendChild(createMeetingRow());
         }
 
         modal.classList.remove('hide');
@@ -79,7 +152,6 @@
     }
 
     async function loadDropdownData() {
-        // ... (همان منطق قبلی برای پر کردن select ها) ...
         try {
             const [coursesRes, instructorsRes, termsRes] = await Promise.all([
                 fetchWithAuth(COURSES_LIST_API),
@@ -91,33 +163,29 @@
             const instructors = await instructorsRes.json();
             const terms = await termsRes.json();
 
-            // ذخیره داده‌ها
             dropdownData.courses = courses;
             dropdownData.instructors = instructors;
             dropdownData.terms = terms;
 
-            // پر کردن لیست دروس
+            // پر کردن لیست‌های کشویی (بدون تغییر)
             const courseSelect = $('#course-select');
             courseSelect.innerHTML = '<option value="">انتخاب درس...</option>';
             courses.forEach(c => {
                 courseSelect.innerHTML += `<option value="${esc(c.code)}">${esc(c.title)} (${esc(c.code)})</option>`;
             });
-
-            // پر کردن لیست اساتید
+            // ... (سایر select ها مانند قبل)
             const instructorSelect = $('#instructor-select');
             instructorSelect.innerHTML = '<option value="">انتخاب استاد...</option>';
             instructors.forEach(i => {
-                // فرض می‌کنیم داده استاد شامل id و name است
                 instructorSelect.innerHTML += `<option value="${esc(i.id)}">${esc(i.name)}</option>`;
             });
 
-            // پر کردن لیست ترم‌ها
             const termSelect = $('#term-select');
             termSelect.innerHTML = '<option value="">انتخاب ترم...</option>';
             terms.forEach(t => {
-                // فرض می‌کنیم داده ترم شامل id و name است
                 termSelect.innerHTML += `<option value="${esc(t.id)}">${esc(t.name)}</option>`;
             });
+
 
         } catch (error) {
             console.error('Error loading dropdown data:', error);
@@ -125,9 +193,10 @@
     }
 
 
+    // ===================================
     // تابع Read (مشاهده لیست و رندر)
+    // ===================================
 
-    // تابع کمکی برای یافتن نام بر اساس ID/Code
     function getDropdownName(type, value) {
         if (!value) return '';
         const list = dropdownData[type];
@@ -140,9 +209,22 @@
         }
     }
 
+    // تابع کمکی: نمایش زمان‌بندی‌ها به صورت یک رشته
+    function formatMeetings(meetings) {
+        if (!meetings || meetings.length === 0) return '---';
+
+        const dayMap = DayEnum.reduce((acc, d) => ({ ...acc, [d.code]: d.name.slice(0, 2) }), {}); // SA -> شن
+
+        return meetings.map(m => {
+            const day = dayMap[m.day] || m.day;
+            const time = m.time_slot;
+            return `${day} ${time} (${m.room_id})`;
+        }).join(' / ');
+    }
+
 
     async function loadSections() {
-        const tbody = $("#sections-table-body"); // فرض می‌کنیم ID جدول بخش‌ها این است
+        const tbody = $("#sections-table-body");
         if (!tbody) return;
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">در حال بارگذاری...</td></tr>';
 
@@ -151,7 +233,7 @@
             if (!res || !res.ok) throw new Error(`HTTP ${res?.status || 500}`);
 
             const data = await res.json();
-            allSections = data.sections || data || []; // ذخیره لیست بخش‌ها
+            allSections = data.sections || data || [];
             tbody.innerHTML = '';
 
             if (allSections.length === 0) {
@@ -159,22 +241,23 @@
                 return;
             }
 
-            // رندرینگ مطابق با الگوی viewCourses.js
             allSections.forEach(s => {
-                const id = s.id; // فرض می‌کنیم ID بخش، کلید اصلی است
+                const id = s.id;
                 const tr = document.createElement("tr"); tr.dataset.id = id;
 
-                // استفاده از توابع کمکی برای نمایش نام به جای ID/Code
-                const courseTitle = getDropdownName('courses', s.course_code);
-                const instructorName = getDropdownName('instructors', s.instructor_id);
-                const termName = getDropdownName('terms', s.term_id);
+                // توجه: در Schema، course کد رشته‌ای است (s.course)
+                const courseTitle = getDropdownName('courses', s.course);
+                const instructorName = getDropdownName('instructors', s.instructor);
+                const termName = getDropdownName('terms', s.term);
+                const meetingSummary = formatMeetings(s.meetings); // خلاصه زمان‌بندی‌ها
 
                 tr.innerHTML = `
-                    <td>${esc(s.id)}</td>
+                    <td>${esc(id)}</td>
                     <td>${esc(courseTitle)}</td>
                     <td>${esc(instructorName)}</td>
                     <td>${esc(termName)}</td>
                     <td>${esc(s.capacity)}</td>
+                    <td>${esc(meetingSummary)}</td>
                     <td>
                         <button class="btn btn-outline btn-edit" type="button" data-id="${esc(id)}">ویرایش</button>
                         <button class="btn btn-outline btn-delete" type="button" data-id="${esc(id)}">حذف</button>
@@ -185,13 +268,42 @@
 
         } catch (err) {
             console.error('Load sections error:', err);
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="color: red;">خطا در بارگذاری لیست بخش‌ها.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: red;">خطا در بارگذاری لیست بخش‌ها.</td></tr>`;
         }
     }
 
+    // ===================================
     // توابع Create, Update, Delete
+    // ===================================
 
-    // افزودن و ویرایش (بدون تغییر در منطق قبلی)
+    // تابع کمکی: جمع‌آوری داده‌های Meetings از فرم
+    function collectMeetingsData() {
+        const meetingRows = $('#meetings-container').querySelectorAll('.meeting-row');
+        const meetings = [];
+
+        meetingRows.forEach(row => {
+            const room_id = row.querySelector('input[name="room_id"]').value;
+            const day = row.querySelector('select[name="day"]').value;
+            const time_slot = row.querySelector('select[name="time_slot"]').value;
+            const idInput = row.querySelector('input[name="meeting_id"]');
+
+            if (room_id && day && time_slot) {
+                const meeting = {
+                    room_id: room_id,
+                    day: day,
+                    time_slot: time_slot
+                };
+                // اگر در حالت ویرایش، ID جلسه (Meeting) وجود داشت، آن را هم می‌فرستیم
+                if (idInput && idInput.value) {
+                    meeting.id = parseInt(idInput.value);
+                }
+                meetings.push(meeting);
+            }
+        });
+        return meetings;
+    }
+
+    // افزودن و ویرایش
     async function onFormSubmit(e) {
         e.preventDefault();
         const form = e.currentTarget;
@@ -201,38 +313,54 @@
         const url = (mode === 'edit' && sectionId) ? SECTIONS_API + encodeURIComponent(sectionId) + "/" : SECTIONS_API;
         const method = (mode === 'edit' && sectionId) ? 'PUT' : 'POST';
 
-        // ... (اعتبار سنجی و ساخت payload همانند قبل)
+        // جمع‌آوری داده‌های اصلی
         const payload = {
-            course_code: $('#course-select').value,
-            instructor_id: parseInt($('#instructor-select').value),
-            term_id: parseInt($('#term-select').value),
+            course: $('#course-select').value, // مطابق با Schema (course*string)
+            instructor: parseInt($('#instructor-select').value) || null, // nullable: true
+            term: parseInt($('#term-select').value),
             capacity: parseInt($('#capacity-input').value),
+            meetings: collectMeetingsData() // جمع‌آوری داده‌های زمان‌بندی
         };
 
-        if (!payload.course_code || isNaN(payload.instructor_id) || isNaN(payload.term_id) || isNaN(payload.capacity) || payload.capacity <= 0) {
-            $("#formMsg").textContent = 'لطفا تمام فیلدها را به درستی پر کنید.';
+        // اعتبار سنجی ساده
+        if (!payload.course || isNaN(payload.term) || isNaN(payload.capacity) || payload.capacity < 0) {
+            $("#formMsg").textContent = 'لطفا فیلدهای درس، ترم و ظرفیت را به درستی پر کنید.';
+            $("#formMsg").style.display = 'block';
             return;
         }
+
+        // چک کردن حداقل یک زمان‌بندی
+        if (payload.meetings.length === 0) {
+            $("#formMsg").textContent = 'باید حداقل یک زمان‌بندی برای برگزاری درس اضافه کنید.';
+            $("#formMsg").style.display = 'block';
+            return;
+        }
+
+        // پاک کردن پیام خطا قبل از ارسال
+        $("#formMsg").textContent = '';
+        $("#formMsg").style.display = 'none';
 
         try {
             const res = await fetchWithAuth(url, { method: method, body: JSON.stringify(payload) });
 
             if (!res || !res.ok) {
                 const body = await res.json().catch(() => ({}));
-                $("#formMsg").textContent = body.message || body.detail || (mode === 'add' ? 'خطا در افزودن بخش.' : 'خطا در ویرایش بخش.');
-                throw new Error(`HTTP ${res.status}`);
+                const msg = body.message || body.detail || (mode === 'add' ? 'خطا در افزودن بخش.' : 'خطا در ویرایش بخش.');
+                $("#formMsg").textContent = msg;
+                $("#formMsg").style.display = 'block';
+                throw new Error(`HTTP ${res?.status || 500}`);
             }
 
             closeSectionModal();
             alert((mode === 'add' ? 'بخش درسی با موفقیت افزوده شد.' : 'بخش درسی با موفقیت ویرایش شد.'));
-            loadSections(); // رفرش لیست
+            loadSections();
 
         } catch (err) {
             console.error(`${mode} section error:`, err);
         }
     }
 
-    // حذف (کمی اصلاح شده برای استفاده از ID)
+    // حذف (بدون تغییر در منطق)
     async function onDeleteClick(e) {
         const btn = e.currentTarget;
         const id = btn.dataset.id || btn.closest("tr")?.dataset?.id;
@@ -244,8 +372,6 @@
             if (res.status === 204 || res.ok) {
                 btn.closest("tr")?.remove();
                 alert("بخش با موفقیت حذف شد.");
-                // اگر دکمه حذف به درستی کار کند نیازی به loadSections نیست اما برای اطمینان:
-                // loadSections(); 
             } else {
                 const body = await res.json().catch(() => null);
                 throw new Error((body && (body.detail || body.message)) || `HTTP ${res.status}`);
@@ -257,18 +383,25 @@
     }
 
 
+    // ===================================
     // رویدادها و شروع
+    // ===================================
 
     document.addEventListener("DOMContentLoaded", () => {
         // ۱. بارگذاری داده‌ها و لیست بخش‌ها
-        loadDropdownData().then(loadSections); // ابتدا داده‌های کشویی، سپس لیست بخش‌ها
+        loadDropdownData().then(loadSections);
 
         // ۲. اتصال رویدادهای مودال و فرم
         $("#addSectionBtn")?.addEventListener('click', () => openSectionModal('add'));
         $("#cancelSectionBtn")?.addEventListener('click', closeSectionModal);
         $("#sectionForm")?.addEventListener('submit', onFormSubmit);
 
-        // ۳. فعال کردن رویدادهای Edit و Delete روی جدول
+        // ۳. اتصال دکمه افزودن زمان‌بندی
+        $("#addMeetingBtn")?.addEventListener('click', () => {
+            $('#meetings-container').appendChild(createMeetingRow());
+        });
+
+        // ۴. فعال کردن رویدادهای Edit و Delete روی جدول
         const sectionsTableBody = $('#sections-table-body');
         if (sectionsTableBody) {
             sectionsTableBody.addEventListener('click', (e) => {
