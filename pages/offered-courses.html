@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>پنل دانشجو - انتخاب واحد</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/student.css">
+</head>
+
+<body>
+
+    <div data-include="../partials/header.html"></div>
+    <aside class="sidebar" id="sidebarFragment">
+        <nav>
+            <ul class="nav">
+                <li><a href="student-dashboard.html">داشبورد</a></li>
+                <li><a href="offered-courses.html">لیست دروس ارائه شده</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+
+
+
+    <main class="main">
+        <h2>لیست دروس ارائه شده</h2>
+
+        <div id="search-section">
+            <input type="text" id="course-search" placeholder="جستجو بر اساس نام درس یا کد درس...">
+        </div>
+
+        <div id="course-list-container" class="card">
+            <table class="course-table">
+                <thead>
+                    <tr>
+                        <th>نام درس</th>
+                        <th>کد درس</th>
+                        <th>واحد</th>
+                        <th>گروه</th>
+                        <th>پیش‌نیاز</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="courses-table-body">
+                </tbody>
+            </table>
+            <p id="no-results" style="display: none; text-align: center; color: gray;">درسی با این مشخصات یافت نشد.</p>
+        </div>
+    </main>
+
+    <div data-include="../partials/footer.html"></div>
+
+
+    <script src="../js/student.js"></script>
+    <script src="../js/layout.js"></script>
+</body>
+
+</html>
