@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const API_LOGIN_ENDPOINT = 'http://127.0.0.1:8000/api/token/';
-    const ADMIN_DASHBOARD_PAGE = 'dashboard.html';
+    const ADMIN_DASHBOARD_PAGE = 'admin-dashboard.html';
     const GENERAL_ERROR_MESSAGE = 'خطایی در ارتباط با سرور رخ داد. دوباره تلاش کنید.';
     const AUTH_FAILED_MESSAGE = 'نام کاربری یا رمز عبور اشتباه است.';
     const GENERAL_MSG_ERR2 = 'شبکه در دسترس نیست.';
