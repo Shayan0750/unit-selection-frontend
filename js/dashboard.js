@@ -1,18 +1,31 @@
-(function(){
-      const path = location.pathname.split('/').pop() || 'dashboard.html';
-      const map = { 'dashboard.html':'link-dashboard', 'courses.html':'link-courses' };
-      const activeId = map[path] || 'link-dashboard';
-      const el = document.getElementById(activeId);
-      if(el) el.classList.add('active');
+document.addEventListener("DOMContentLoaded", () => {
+  const welcomeText = document.getElementById("welcomeText");
 
-      const sidebar = document.getElementById('sidebar');
-      const toggle = document.getElementById('toggleSidebar');
-      if(toggle && sidebar){
-        toggle.addEventListener('click', ()=> sidebar.classList.toggle('open'));
-        document.addEventListener('click', (e)=> {
-          if(window.innerWidth <= 900){
-            if(!sidebar.contains(e.target) && !toggle.contains(e.target)) sidebar.classList.remove('open');
-          }
-        });
+  try {
+      const token = localStorage.getItem("access");
+      if (!token) {
+          welcomeText.textContent = "سلام! خوش آمدید.";
+          return;
       }
-    })();
+
+      // decode JWT
+      const payloadBase64 = token.split(".")[1];
+      const payloadJson = atob(payloadBase64);
+      const payload = JSON.parse(payloadJson);
+
+      console.log("JWT PAYLOAD:", payload);
+
+      // اولویت: first_name → last_name → username
+      const name =
+          (payload.first_name && payload.first_name.trim() !== "" ? payload.first_name : null) ||
+          (payload.last_name && payload.last_name.trim() !== "" ? payload.last_name : null) ||
+          payload.username ||
+          "کاربر";
+
+      welcomeText.textContent = `سلام ${name} جان! خوش آمدید.`;
+
+  } catch (err) {
+      console.error(err);
+      welcomeText.textContent = "سلام! خوش آمدید.";
+  }
+});
