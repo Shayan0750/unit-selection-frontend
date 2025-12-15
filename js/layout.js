@@ -64,8 +64,24 @@
     dashboardLink.textContent = userRole === 'instructor' ? 'پنل استاد' : 'داشبورد';
   }
 
+  // ------------------ مدیریت نمایش نقش کاربر در header ------------------
+  function updateUserRoleLabel() {
+    let userRole = localStorage.getItem('role') || '';
+    userRole = userRole.toLowerCase();
+
+    const roleLabel = $('#userRoleLabel');
+    if (!roleLabel) return;
+
+    let displayText = '';
+    switch(userRole) {
+      case 'student': displayText = 'دانشجو'; break;
+      case 'instructor': displayText = 'استاد'; break;
+      case 'admin': displayText = 'مدیر سیستم'; break;
+      default: displayText = 'کاربر'; break;
+    }
+
     roleLabel.textContent = displayText;
   }
 
-)();
+})();
 
