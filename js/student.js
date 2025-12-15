@@ -152,10 +152,9 @@ function handleSearch(e) {
     }
 
     const filteredCourses = allCourses.filter(course => {
-        const nameMatch = course.name && course.name.toLowerCase().includes(searchTerm);
-        const professorMatch = course.professorName && course.professorName.toLowerCase().includes(searchTerm);
+        const nameMatch = course.title && course.title.toLowerCase().includes(searchTerm);
         const codeMatch = course.code && course.code.toLowerCase().includes(searchTerm); 
-        return nameMatch || professorMatch || codeMatch;
+        return nameMatch || codeMatch;
     });
 
     renderCourses(filteredCourses);
