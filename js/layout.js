@@ -3,6 +3,7 @@
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
 
+  // ------------------ بارگذاری include ها ------------------
   async function loadIncludes(){
     const nodes = $$('[data-include]');
     await Promise.all(nodes.map(async node => {
@@ -16,6 +17,7 @@
     initParts();
   }
 
+  // ------------------ تنظیم اجزای ثابت ------------------
   function initParts(){
     const file = (location.pathname.split('/').pop() || 'dashboard.html');
     const name = file.replace('.html','');
@@ -32,39 +34,54 @@
     if (toggle && sidebar) toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
 
     // logout (placeholder)
-    const logout = $('#logoutBtn');
-    if (logout) logout.addEventListener('click', () => console.log('logout clicked (implement auth/logout logic)'));
+    const logout = $('#logoutBtn') || $('#logout-btn');
+    if (logout) logout.addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+
+    updateDashboardLink();
+    updateUserRoleLabel();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadIncludes);
   else loadIncludes();
 
-  // js/layout.js - مدیریت تغییر لینک داشبورد بر اساس نقش کاربر
+  // ------------------ مدیریت لینک داشبورد بر اساس نقش ------------------
+  function updateDashboardLink() {
+    let userRole = localStorage.getItem('role') || '';
+    userRole = userRole.toLowerCase();
 
-
-function updateDashboardLink() {
-    const userRole = localStorage.getItem('role');
     const dashboardLink = $('#dashboard-link');
+    if (!dashboardLink) return;
 
-    if (dashboardLink) {
-        let targetHref = 'login.html'; // پیش‌فرض: اگر نقش نامشخص بود
+    let targetHref = 'login.html';
+    if (userRole === 'student') targetHref = 'student-dashboard.html';
+    else if (userRole === 'instructor') targetHref = 'instructor-dashboard.html';
+    else if (userRole === 'admin') targetHref = 'admin-dashboard.html';
 
-        if (userRole === 'student') {
-            targetHref = 'student-dashboard.html';
-        } else if (userRole === 'instructor') { // یا professor، بر اساس نامی که در localStorage ذخیره می‌کنید
-            targetHref = 'instructor-dashboard.html';
-        } else if (userRole === 'admin') {
-            targetHref = 'admin-dashboard.html';
-        }
-        
-        // تنظیم ویژگی href جدید
-        dashboardLink.setAttribute('href', targetHref);
-        
-        // اگر لازم بود، متن دکمه هم تغییر کند
-        dashboardLink.textContent = userRole === 'instructor' ? 'پنل استاد' : 'داشبورد'; 
+    dashboardLink.setAttribute('href', targetHref);
+    dashboardLink.textContent = userRole === 'instructor' ? 'پنل استاد' : 'داشبورد';
+  }
+
+  // ------------------ مدیریت نمایش نقش کاربر در header ------------------
+  function updateUserRoleLabel() {
+    let userRole = localStorage.getItem('role') || '';
+    userRole = userRole.toLowerCase();
+
+    const roleLabel = $('#userRoleLabel');
+    if (!roleLabel) return;
+
+    let displayText = '';
+    switch(userRole) {
+      case 'student': displayText = 'دانشجو'; break;
+      case 'instructor': displayText = 'استاد'; break;
+      case 'admin': displayText = 'مدیر سیستم'; break;
+      default: displayText = 'کاربر'; break;
     }
-}
 
-// اجرای تابع پس از بارگذاری کامل DOM
-document.addEventListener('DOMContentLoaded', updateDashboardLink);
+    roleLabel.textContent = displayText;
+  }
+
 })();
+

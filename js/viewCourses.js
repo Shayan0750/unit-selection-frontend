@@ -1,22 +1,31 @@
-// ../js/viewCourses.js — minimal: list + edit + delete using course code in URLs
 (() => {
   const API = "http://127.0.0.1:8000/api/courses/";
   const REFRESH = "http://127.0.0.1:8000/api/token/refresh/";
   const $ = s => document.querySelector(s);
-  const esc = s => String(s==null?"":s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  const esc = s => String(s==null?"":s)
+                      .replaceAll("&","&amp;")
+                      .replaceAll("<","&lt;")
+                      .replaceAll(">","&gt;");
 
   /* auth helpers */
   function tokens(){ return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') }; }
   async function refreshAccess(){
     const t = tokens(); if(!t.refresh) return null;
     try {
-      const r = await fetch(REFRESH, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ refresh: t.refresh }) });
+      const r = await fetch(REFRESH, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ refresh: t.refresh })
+      });
       if(!r.ok) return null;
       const j = await r.json();
-      if(j.access){ localStorage.setItem('access', j.access); if(j.refresh) localStorage.setItem('refresh', j.refresh); return j.access; }
+      if(j.access){ localStorage.setItem('access', j.access);
+                     if(j.refresh) localStorage.setItem('refresh', j.refresh);
+                     return j.access; }
     } catch(e){ console.warn('refresh failed', e); }
     return null;
   }
+
   async function fetchWithAuth(url, opts = {}, retry = true){
     opts.headers = opts.headers || {};
     const t = tokens(); if(t.access) opts.headers['Authorization'] = 'Bearer ' + t.access;
@@ -29,7 +38,7 @@
     return fetch(url, opts);
   }
 
-  /* load list (uses course.code as identifier) */
+  /* load list */
   async function loadCourses(){
     const tbody = $("#coursesTable"); if(!tbody) return;
     tbody.innerHTML = "<tr><td colspan=5>در حال بارگذاری...</td></tr>";
@@ -71,7 +80,9 @@
       const res = await fetchWithAuth(API + encodeURIComponent(code) + "/");
       if(!res.ok) throw new Error(res.status);
       const c = await res.json();
-      $("#courseCode").value = c.code ?? "";
+      const codeInput = $("#courseCode");
+      codeInput.value = c.code ?? "";
+      codeInput.readOnly = true; // ← کد را هنگام ویرایش readonly می‌کنیم
       $("#courseTitle").value = c.title ?? "";
       $("#courseGroup").value = c.department ?? c.group ?? "";
       $("#courseCredits").value = c.units ?? c.credits ?? "";
@@ -79,7 +90,7 @@
       $("#modalTitle") && ($("#modalTitle").textContent = "ویرایش درس");
       $("#saveCourseBtn") && ($("#saveCourseBtn").textContent = "بروزرسانی");
       $("#courseModal") && $("#courseModal").classList.remove("hide");
-      setTimeout(()=> $("#courseCode")?.focus(), 50);
+      setTimeout(()=> codeInput?.focus(), 50);
     } catch (err) { console.error("open edit error:", err); alert("خطا در دریافت جزئیات درس"); }
   }
 
@@ -93,7 +104,6 @@
     const dept = ($("#courseGroup")?.value||"").trim();
     const units = Number($("#courseCredits")?.value);
     let ok = true;
-    if(!code){ $("#errCode").textContent = "کد درس را وارد کنید."; ok=false } else $("#errCode").textContent = "";
     if(!title){ $("#errTitle").textContent = "عنوان درس را وارد کنید."; ok=false } else $("#errTitle").textContent = "";
     if(!dept){ $("#errGroup").textContent = "گروه درسی را وارد کنید."; ok=false } else $("#errGroup").textContent = "";
     if(!Number.isFinite(units) || units<=0){ $("#errCredits").textContent = "تعداد واحد معتبر وارد کنید."; ok=false } else $("#errCredits").textContent = "";
@@ -110,16 +120,12 @@
         const body = await res.json().catch(()=>null);
         throw new Error((body && (body.detail||body.message)) || `HTTP ${res.status}`);
       }
-      // update row: find row by original code and update dataset/code buttons
+      // update row
       const tr = document.querySelector(`#coursesTable tr[data-code="${CSS.escape(originalCode)}"]`) || Array.from(document.querySelectorAll('#coursesTable tr')).find(r => r.dataset.code === originalCode);
       if(tr){
-        tr.dataset.code = code;
-        tr.children[0].textContent = payload.code;
         tr.children[1].textContent = payload.title;
         tr.children[2].textContent = String(payload.units);
         tr.children[3].textContent = payload.department;
-        // update buttons' data-code
-        tr.querySelectorAll('button[data-code]').forEach(b => b.dataset.code = code);
       }
       delete form.dataset.editCode;
       $("#modalTitle") && ($("#modalTitle").textContent = "درج درس جدید");

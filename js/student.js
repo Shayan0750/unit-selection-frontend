@@ -133,13 +133,6 @@ function renderCourses(courses) {
         
         const prereqs = course.prerequisites ? course.prerequisites.map(p => p.name).join(', ') : 'ندارد';
         row.insertCell().textContent = prereqs;
-
-        const actionCell = row.insertCell();
-        const registerBtn = document.createElement('button');
-        registerBtn.textContent = 'اخذ درس';
-        registerBtn.classList.add('register-btn');
-        registerBtn.dataset.code = course.code;
-        actionCell.appendChild(registerBtn);
     });
 }
 
