@@ -1,419 +1,354 @@
 (() => {
-    // ===================================
-    // ثابت‌ها، توابع کمکی و Enums
-    // ===================================
-    const API_BASE_URL = "http://127.0.0.1:8000/api/";
-    const SECTIONS_API = API_BASE_URL + "sections/";
-    const COURSES_LIST_API = API_BASE_URL + "courses/list/";
-    const INSTRUCTORS_API = API_BASE_URL + "users/instructors/";
-    const TERMS_API = API_BASE_URL + "terms/";
-    const REFRESH_URL = API_BASE_URL + "token/refresh/";
+    // ==========================================
+    // 1. CONFIGURATION & HELPERS
+    // ==========================================
+    const API_BASE = "http://127.0.0.1:8000/api/";
+    const URLS = {
+        SECTIONS: API_BASE + "sections/",
+        COURSES: API_BASE + "courses/",
+        REFRESH: API_BASE + "token/refresh/"
+    };
 
-    // Enums مطابق با Schema شما
+    // Constants Locked
+    const CONSTANTS = {
+        INSTRUCTOR_ID: 1, // Locked
+        TERM_ID: 1        // Locked
+    };
+
     const DayEnum = [
         { code: 'SA', name: 'شنبه' }, { code: 'SU', name: 'یکشنبه' },
         { code: 'MO', name: 'دوشنبه' }, { code: 'TU', name: 'سه‌شنبه' },
         { code: 'WE', name: 'چهارشنبه' }, { code: 'TH', name: 'پنجشنبه' },
         { code: 'FR', name: 'جمعه' }
     ];
+
     const TimeSlotEnum = [
-        { code: '8-10', name: '۰۸:۰۰ – ۱۰:۰۰' }, { code: '10-12', name: '۱۰:۰۰ – ۱۲:۰۰' },
-        { code: '12-14', name: '۱۲:۰۰ – ۱۴:۰۰' }, { code: '14-16', name: '۱۴:۰۰ – ۱۶:۰۰' },
-        { code: '16-18', name: '۱۶:۰۰ – ۱۸:۰۰' }
+        { code: '8-10', name: '08:00 - 10:00' },
+        { code: '10-12', name: '10:00 - 12:00' },
+        { code: '12-14', name: '12:00 - 14:00' },
+        { code: '14-16', name: '14:00 - 16:00' },
+        { code: '16-18', name: '16:00 - 18:00' }
     ];
 
+    // Helper Selectors
     const $ = s => document.querySelector(s);
-    const esc = s => String(s == null ? "" : s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    let dropdownData = {};
-    let allSections = [];
+    // Global State
+    let state = {
+        courses: [], // To map Code -> Title
+        sections: []
+    };
 
-    // توابع Auth (فرض می‌شود که fetchWithAuth و refreshAccess همانند قبل کار می‌کنند)
-    function tokens() { return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') }; }
-
-    // ... (توابع fetchWithAuth و refreshAccess همانند کد قبلی شما) ...
-    // [BEGIN fetchWithAuth and refreshAccess functions - Keep them from the previous correct version]
-    async function refreshAccess() {
-        const t = tokens(); if (!t.refresh) return null;
-        try {
-            const r = await fetch(REFRESH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh: t.refresh }) });
-            if (!r.ok) return null;
-            const j = await r.json();
-            if (j.access) { localStorage.setItem('access', j.access); if (j.refresh) localStorage.setItem('refresh', j.refresh); return j.access; }
-        } catch (e) { console.warn('refresh failed', e); }
-        return null;
+    // ==========================================
+    // 2. AUTHENTICATION (Standardized)
+    // ==========================================
+    function tokens() {
+        return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') };
     }
 
-    async function fetchWithAuth(url, opts = {}, retry = true) {
-        opts.headers = opts.headers || {};
-        let t = tokens(); if (t.access) opts.headers['Authorization'] = `Bearer ${t.access}`;
-        opts.headers['Content-Type'] = opts.headers['Content-type'] || 'application/json';
+    async function refreshAccess() {
+        const t = tokens();
+        if (!t.refresh) return null;
+        try {
+            const res = await fetch(URLS.REFRESH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh: t.refresh })
+            });
+            if (!res.ok) throw new Error('Refresh failed');
+            const data = await res.json();
+            localStorage.setItem('access', data.access);
+            if (data.refresh) localStorage.setItem('refresh', data.refresh);
+            return data.access;
+        } catch (e) {
+            console.warn(e);
+            return null;
+        }
+    }
 
-        let res = await fetch(url, opts);
+    async function fetchWithAuth(url, options = {}, retry = true) {
+        options.headers = options.headers || {};
+        options.headers['Content-Type'] = 'application/json';
 
-        if (res.status === 401 && retry) {
+        let t = tokens();
+        if (t.access) options.headers['Authorization'] = `Bearer ${t.access}`;
+
+        let response = await fetch(url, options);
+
+        if (response.status === 401 && retry) {
             const newAccess = await refreshAccess();
             if (newAccess) {
-                opts.headers['Authorization'] = `Bearer ${newAccess}`;
-                res = await fetchWithAuth(url, opts, false);
+                options.headers['Authorization'] = `Bearer ${newAccess}`;
+                response = await fetch(url, options);
             } else {
-                localStorage.clear();
                 window.location.href = 'login.html';
-                return;
+                return null;
             }
         }
-        return res;
+        return response;
     }
-    // [END fetchWithAuth and refreshAccess functions]
 
+    // ==========================================
+    // 3. UI LOGIC (Modal & Meetings)
+    // ==========================================
 
-    // ===================================
-    // توابع مودال، فرم و Meetings
-    // ===================================
-
-    // تابع کمکی: ساخت یک ردیف جدید زمان‌بندی
-    function createMeetingRow(meeting = {}) {
+    // Generate a single meeting row from Template
+    function addMeetingRow(data = null) {
         const template = $('#meetingRowTemplate');
-        if (!template) return;
+        const clone = template.content.cloneNode(true);
+        const container = $('#meetings-container');
 
-        const row = template.content.cloneNode(true);
-        const container = row.querySelector('.meeting-row');
+        const row = clone.querySelector('.meeting-row');
+        const daySelect = row.querySelector('select[name="day"]');
+        const timeSelect = row.querySelector('select[name="time_slot"]');
+        const roomInput = row.querySelector('input[name="room_id"]');
+        const idInput = row.querySelector('input[name="meeting_id"]');
 
-        // پر کردن فیلدهای روز و ساعت
-        const daySelect = container.querySelector('select[name="day"]');
-        const timeSelect = container.querySelector('select[name="time_slot"]');
-
+        // Populate Enums
         DayEnum.forEach(d => {
-            daySelect.innerHTML += `<option value="${esc(d.code)}">${esc(d.name)}</option>`;
+            daySelect.innerHTML += `<option value="${d.code}">${d.name}</option>`;
         });
         TimeSlotEnum.forEach(t => {
-            timeSelect.innerHTML += `<option value="${esc(t.code)}">${esc(t.name)}</option>`;
+            timeSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`;
         });
 
-        // پر کردن داده‌ها در حالت ویرایش
-        if (meeting.room_id) {
-            container.querySelector('input[name="room_id"]').value = meeting.room_id;
-            daySelect.value = meeting.day;
-            timeSelect.value = meeting.time_slot;
-            // اگر ID وجود داشت آن را در یک input hidden برای ویرایش ذخیره می‌کنیم
-            if (meeting.id) {
-                container.innerHTML += `<input type="hidden" name="meeting_id" value="${esc(meeting.id)}">`;
-            }
+        // Fill Data if Edit Mode
+        if (data) {
+            daySelect.value = data.day;
+            timeSelect.value = data.time_slot;
+            roomInput.value = data.room_id;
+            if (data.id) idInput.value = data.id;
         }
 
-        // اتصال دکمه حذف
-        container.querySelector('.remove-meeting-btn').addEventListener('click', (e) => {
-            e.currentTarget.closest('.meeting-row')?.remove();
+        // Remove Button Logic
+        row.querySelector('.remove-meeting-btn').addEventListener('click', () => {
+            row.remove();
         });
 
-        return row;
+        container.appendChild(row);
     }
 
-    function openSectionModal(mode = 'add', sectionData = {}) {
-        const modal = $("#sectionModal");
-        if (!modal) return;
+    // Open Modal
+    function openModal(mode, data = {}) {
+        const modal = $('#sectionModal');
+        const form = $('#sectionForm');
 
-        $("#sectionForm").reset();
-        $("#formMsg").textContent = '';
+        // Reset Form
+        form.reset();
+        $('#meetings-container').innerHTML = '';
+        $('#formMsg').style.display = 'none';
 
-        $("#modal-title").textContent = (mode === 'add') ? 'افزودن بخش درسی جدید' : 'ویرایش بخش';
-        $("#sectionForm").dataset.mode = mode;
+        $('#sectionForm').dataset.mode = mode;
+        $('#modal-title').textContent = mode === 'add' ? 'افزودن بخش جدید' : 'ویرایش بخش';
 
-        // پاک کردن ردیف‌های زمان‌بندی قدیمی
-        const meetingsContainer = $('#meetings-container');
-        meetingsContainer.innerHTML = '';
+        // Load Course Options
+        const courseSelect = $('#course-select');
+        courseSelect.innerHTML = '<option value="">انتخاب درس...</option>';
+        state.courses.forEach(c => {
+            courseSelect.innerHTML += `<option value="${c.code}">${c.title} (${c.code})</option>`;
+        });
 
-        if (mode === 'edit' && sectionData.id) {
-            $("#section-id").value = sectionData.id;
-            $("#course-select").value = sectionData.course; // توجه: از 'course' استفاده می‌کنیم
-            $("#instructor-select").value = sectionData.instructor;
-            $("#term-select").value = sectionData.term;
-            $("#capacity-input").value = sectionData.capacity;
+        if (mode === 'edit') {
+            $('#section-id').value = data.id;
+            $('#course-select').value = data.course; // Uses Course Code
+            $('#capacity-input').value = data.capacity;
 
-            // پر کردن ردیف‌های زمان‌بندی
-            if (sectionData.meetings && sectionData.meetings.length > 0) {
-                sectionData.meetings.forEach(m => {
-                    meetingsContainer.appendChild(createMeetingRow(m));
-                });
+            // Populate meetings
+            if (data.meetings && data.meetings.length > 0) {
+                data.meetings.forEach(m => addMeetingRow(m));
             } else {
-                // اگر ویرایش است و میتینگ ندارد، یک ردیف خالی اضافه شود
-                meetingsContainer.appendChild(createMeetingRow());
+                addMeetingRow(); // Always show at least one
             }
         } else {
-            // در حالت افزودن، یک ردیف خالی اضافه شود
-            meetingsContainer.appendChild(createMeetingRow());
+            addMeetingRow(); // Default empty row for new section
         }
 
         modal.classList.remove('hide');
     }
 
-    function closeSectionModal() {
-        $("#sectionModal")?.classList.add('hide');
-    }
+    // ==========================================
+    // 4. DATA LOGIC (Load, Submit, Delete)
+    // ==========================================
 
-    async function loadDropdownData() {
+    async function init() {
         try {
-            const [coursesRes, instructorsRes, termsRes] = await Promise.all([
-                fetchWithAuth(COURSES_LIST_API),
-                fetchWithAuth(INSTRUCTORS_API),
-                fetchWithAuth(TERMS_API)
-            ]);
+            // 1. Fetch Courses for Dropdown
+            const cRes = await fetchWithAuth(URLS.COURSES);
+            if (cRes.ok) state.courses = await cRes.json();
 
-            const courses = await coursesRes.json();
-            const instructors = await instructorsRes.json();
-            const terms = await termsRes.json();
+            // 2. Fetch Sections for Table
+            await loadSections();
 
-            dropdownData.courses = courses;
-            dropdownData.instructors = instructors;
-            dropdownData.terms = terms;
-
-            // پر کردن لیست‌های کشویی (بدون تغییر)
-            const courseSelect = $('#course-select');
-            courseSelect.innerHTML = '<option value="">انتخاب درس...</option>';
-            courses.forEach(c => {
-                courseSelect.innerHTML += `<option value="${esc(c.code)}">${esc(c.title)} (${esc(c.code)})</option>`;
-            });
-            // ... (سایر select ها مانند قبل)
-            const instructorSelect = $('#instructor-select');
-            instructorSelect.innerHTML = '<option value="">انتخاب استاد...</option>';
-            instructors.forEach(i => {
-                instructorSelect.innerHTML += `<option value="${esc(i.id)}">${esc(i.name)}</option>`;
-            });
-
-            const termSelect = $('#term-select');
-            termSelect.innerHTML = '<option value="">انتخاب ترم...</option>';
-            terms.forEach(t => {
-                termSelect.innerHTML += `<option value="${esc(t.id)}">${esc(t.name)}</option>`;
-            });
-
-
-        } catch (error) {
-            console.error('Error loading dropdown data:', error);
+        } catch (e) {
+            console.error("Init failed", e);
         }
     }
-
-
-    // ===================================
-    // تابع Read (مشاهده لیست و رندر)
-    // ===================================
-
-    function getDropdownName(type, value) {
-        if (!value) return '';
-        const list = dropdownData[type];
-        if (!list) return value;
-
-        if (type === 'courses') {
-            return list.find(item => item.code === value)?.title || value;
-        } else {
-            return list.find(item => item.id == value)?.name || value;
-        }
-    }
-
-    // تابع کمکی: نمایش زمان‌بندی‌ها به صورت یک رشته
-    function formatMeetings(meetings) {
-        if (!meetings || meetings.length === 0) return '---';
-
-        const dayMap = DayEnum.reduce((acc, d) => ({ ...acc, [d.code]: d.name.slice(0, 2) }), {}); // SA -> شن
-
-        return meetings.map(m => {
-            const day = dayMap[m.day] || m.day;
-            const time = m.time_slot;
-            return `${day} ${time} (${m.room_id})`;
-        }).join(' / ');
-    }
-
 
     async function loadSections() {
-        const tbody = $("#sections-table-body");
-        if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">در حال بارگذاری...</td></tr>';
+        const tbody = $('#sections-table-body');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">در حال بارگذاری...</td></tr>';
 
-        try {
-            const res = await fetchWithAuth(SECTIONS_API);
-            if (!res || !res.ok) throw new Error(`HTTP ${res?.status || 500}`);
-
-            const data = await res.json();
-            allSections = data.sections || data || [];
-            tbody.innerHTML = '';
-
-            if (allSections.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">بخشی یافت نشد.</td></tr>';
-                return;
-            }
-
-            allSections.forEach(s => {
-                const id = s.id;
-                const tr = document.createElement("tr"); tr.dataset.id = id;
-
-                // توجه: در Schema، course کد رشته‌ای است (s.course)
-                const courseTitle = getDropdownName('courses', s.course);
-                const instructorName = getDropdownName('instructors', s.instructor);
-                const termName = getDropdownName('terms', s.term);
-                const meetingSummary = formatMeetings(s.meetings); // خلاصه زمان‌بندی‌ها
-
-                tr.innerHTML = `
-                    <td>${esc(id)}</td>
-                    <td>${esc(courseTitle)}</td>
-                    <td>${esc(instructorName)}</td>
-                    <td>${esc(termName)}</td>
-                    <td>${esc(s.capacity)}</td>
-                    <td>${esc(meetingSummary)}</td>
-                    <td>
-                        <button class="btn btn-outline btn-edit" type="button" data-id="${esc(id)}">ویرایش</button>
-                        <button class="btn btn-outline btn-delete" type="button" data-id="${esc(id)}">حذف</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-        } catch (err) {
-            console.error('Load sections error:', err);
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: red;">خطا در بارگذاری لیست بخش‌ها.</td></tr>`;
+        const res = await fetchWithAuth(URLS.SECTIONS);
+        if (!res || !res.ok) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red">خطا در دریافت اطلاعات</td></tr>';
+            return;
         }
-    }
 
-    // ===================================
-    // توابع Create, Update, Delete
-    // ===================================
+        state.sections = await res.json(); // Usually an array, or { results: [] }
+        const list = Array.isArray(state.sections) ? state.sections : (state.sections.results || []);
 
-    // تابع کمکی: جمع‌آوری داده‌های Meetings از فرم
-    function collectMeetingsData() {
-        const meetingRows = $('#meetings-container').querySelectorAll('.meeting-row');
-        const meetings = [];
+        tbody.innerHTML = '';
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">هیچ بخشی یافت نشد</td></tr>';
+            return;
+        }
 
-        meetingRows.forEach(row => {
-            const room_id = row.querySelector('input[name="room_id"]').value;
-            const day = row.querySelector('select[name="day"]').value;
-            const time_slot = row.querySelector('select[name="time_slot"]').value;
-            const idInput = row.querySelector('input[name="meeting_id"]');
+        list.forEach(item => {
+            // Find Course Title based on Code
+            const courseObj = state.courses.find(c => c.code === item.course);
+            const courseTitle = courseObj ? courseObj.title : item.course;
 
-            if (room_id && day && time_slot) {
-                const meeting = {
-                    room_id: room_id,
-                    day: day,
-                    time_slot: time_slot
-                };
-                // اگر در حالت ویرایش، ID جلسه (Meeting) وجود داشت، آن را هم می‌فرستیم
-                if (idInput && idInput.value) {
-                    meeting.id = parseInt(idInput.value);
-                }
-                meetings.push(meeting);
-            }
+            // Format Meetings string
+            const meetingsStr = item.meetings.map(m =>
+                `${m.day} ${m.time_slot} (${m.room_id})`
+            ).join(' <br> ');
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.id}</td>
+                <td><b>${esc(courseTitle)}</b><br><small>${esc(item.course)}</small></td>
+                <td>${esc(item.capacity)}</td>
+                <td style="font-size:0.9em">${meetingsStr}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary btn-edit" data-id="${item.id}">ویرایش</button>
+                    <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${item.id}">حذف</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
         });
-        return meetings;
     }
 
-    // افزودن و ویرایش
+    // Submit Handler
     async function onFormSubmit(e) {
         e.preventDefault();
-        const form = e.currentTarget;
-        const mode = form.dataset.mode || 'add';
+        const msg = $('#formMsg');
+        msg.style.display = 'none';
 
-        const sectionId = $("#section-id").value;
-        const url = (mode === 'edit' && sectionId) ? SECTIONS_API + encodeURIComponent(sectionId) + "/" : SECTIONS_API;
-        const method = (mode === 'edit' && sectionId) ? 'PUT' : 'POST';
+        // 1. Collect Basic Data
+        const mode = $('#sectionForm').dataset.mode;
+        const id = $('#section-id').value;
+        const course = $('#course-select').value;
+        const capacity = parseInt($('#capacity-input').value);
 
-        // جمع‌آوری داده‌های اصلی
-        const payload = {
-            course: $('#course-select').value, // مطابق با Schema (course*string)
-            instructor: parseInt($('#instructor-select').value) || null, // nullable: true
-            term: parseInt($('#term-select').value),
-            capacity: parseInt($('#capacity-input').value),
-            meetings: collectMeetingsData() // جمع‌آوری داده‌های زمان‌بندی
-        };
+        // 2. Collect Meetings Data
+        const meetingRows = document.querySelectorAll('.meeting-row');
+        let meetings = [];
+        meetingRows.forEach(row => {
+            const day = row.querySelector('select[name="day"]').value;
+            const time = row.querySelector('select[name="time_slot"]').value;
+            const room = row.querySelector('input[name="room_id"]').value;
+            const mid = row.querySelector('input[name="meeting_id"]').value;
 
-        // اعتبار سنجی ساده
-        if (!payload.course || isNaN(payload.term) || isNaN(payload.capacity) || payload.capacity < 0) {
-            $("#formMsg").textContent = 'لطفا فیلدهای درس، ترم و ظرفیت را به درستی پر کنید.';
-            $("#formMsg").style.display = 'block';
-            return;
-        }
-
-        // چک کردن حداقل یک زمان‌بندی
-        if (payload.meetings.length === 0) {
-            $("#formMsg").textContent = 'باید حداقل یک زمان‌بندی برای برگزاری درس اضافه کنید.';
-            $("#formMsg").style.display = 'block';
-            return;
-        }
-
-        // پاک کردن پیام خطا قبل از ارسال
-        $("#formMsg").textContent = '';
-        $("#formMsg").style.display = 'none';
-
-        try {
-            const res = await fetchWithAuth(url, { method: method, body: JSON.stringify(payload) });
-
-            if (!res || !res.ok) {
-                const body = await res.json().catch(() => ({}));
-                const msg = body.message || body.detail || (mode === 'add' ? 'خطا در افزودن بخش.' : 'خطا در ویرایش بخش.');
-                $("#formMsg").textContent = msg;
-                $("#formMsg").style.display = 'block';
-                throw new Error(`HTTP ${res?.status || 500}`);
+            if (day && time && room) {
+                let mObj = { day: day, time_slot: time, room_id: room };
+                if (mid && mode === 'edit') mObj.id = parseInt(mid); // Send ID only if editing
+                meetings.push(mObj);
             }
-
-            closeSectionModal();
-            alert((mode === 'add' ? 'بخش درسی با موفقیت افزوده شد.' : 'بخش درسی با موفقیت ویرایش شد.'));
-            loadSections();
-
-        } catch (err) {
-            console.error(`${mode} section error:`, err);
-        }
-    }
-
-    // حذف (بدون تغییر در منطق)
-    async function onDeleteClick(e) {
-        const btn = e.currentTarget;
-        const id = btn.dataset.id || btn.closest("tr")?.dataset?.id;
-        if (!id) return console.warn("missing section id");
-        if (!confirm("آیا از حذف این بخش مطمئن هستید؟")) return;
-
-        try {
-            const res = await fetchWithAuth(SECTIONS_API + encodeURIComponent(id) + "/", { method: "DELETE" });
-            if (res.status === 204 || res.ok) {
-                btn.closest("tr")?.remove();
-                alert("بخش با موفقیت حذف شد.");
-            } else {
-                const body = await res.json().catch(() => null);
-                throw new Error((body && (body.detail || body.message)) || `HTTP ${res.status}`);
-            }
-        } catch (err) {
-            console.error("delete error:", err);
-            alert("خطا در حذف بخش");
-        }
-    }
-
-
-    // ===================================
-    // رویدادها و شروع
-    // ===================================
-
-    document.addEventListener("DOMContentLoaded", () => {
-        // ۱. بارگذاری داده‌ها و لیست بخش‌ها
-        loadDropdownData().then(loadSections);
-
-        // ۲. اتصال رویدادهای مودال و فرم
-        $("#addSectionBtn")?.addEventListener('click', () => openSectionModal('add'));
-        $("#cancelSectionBtn")?.addEventListener('click', closeSectionModal);
-        $("#sectionForm")?.addEventListener('submit', onFormSubmit);
-
-        // ۳. اتصال دکمه افزودن زمان‌بندی
-        $("#addMeetingBtn")?.addEventListener('click', () => {
-            $('#meetings-container').appendChild(createMeetingRow());
         });
 
-        // ۴. فعال کردن رویدادهای Edit و Delete روی جدول
-        const sectionsTableBody = $('#sections-table-body');
-        if (sectionsTableBody) {
-            sectionsTableBody.addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn-edit')) {
-                    const id = e.target.dataset.id;
-                    const section = allSections.find(s => s.id == id);
-                    if (section) openSectionModal('edit', section);
-                } else if (e.target.classList.contains('btn-delete')) {
-                    onDeleteClick(e);
-                }
-            });
+        // 3. Validation
+        if (!course || isNaN(capacity)) {
+            msg.textContent = "لطفا درس و ظرفیت را انتخاب کنید";
+            msg.style.display = 'block';
+            return;
         }
+        if (meetings.length === 0) {
+            msg.textContent = "حداقل یک زمان‌بندی وارد کنید";
+            msg.style.display = 'block';
+            return;
+        }
+
+        // 4. Construct Payload (Locked fields are hardcoded here)
+        const payload = {
+            course: course,           // string code
+            capacity: capacity,       // integer
+            instructor: CONSTANTS.INSTRUCTOR_ID, // Locked to 1
+            term: CONSTANTS.TERM_ID,             // Locked to 1
+            meetings: meetings        // array of objects
+        };
+
+        // 5. Send Request
+        const url = mode === 'edit' ? `${URLS.SECTIONS}${id}/` : URLS.SECTIONS;
+        const method = mode === 'edit' ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetchWithAuth(url, {
+                method: method,
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                $('#sectionModal').classList.add('hide');
+                loadSections(); // Refresh Table
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                msg.textContent = JSON.stringify(errData) || "خطا در برقراری ارتباط با سرور";
+                msg.style.display = 'block';
+            }
+        } catch (err) {
+            msg.textContent = "خطای غیرمنتظره رخ داد";
+            msg.style.display = 'block';
+            console.error(err);
+        }
+    }
+
+    // Delete Handler
+    async function deleteSection(id) {
+        if (!confirm("آیا از حذف این بخش مطمئن هستید؟")) return;
+
+        const res = await fetchWithAuth(`${URLS.SECTIONS}${id}/`, { method: 'DELETE' });
+        if (res.ok) {
+            loadSections();
+        } else {
+            alert("خطا در حذف آیتم");
+        }
+    }
+
+    // ==========================================
+    // 5. EVENT BINDINGS
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+        init();
+
+        // Open Add Modal
+        $('#addSectionBtn').addEventListener('click', () => openModal('add'));
+
+        // Close Modal
+        $('#cancelSectionBtn').addEventListener('click', () => $('#sectionModal').classList.add('hide'));
+
+        // Submit Form
+        $('#sectionForm').addEventListener('submit', onFormSubmit);
+
+        // Add Meeting Row Button
+        $('#addMeetingBtn').addEventListener('click', () => addMeetingRow());
+
+        // Edit/Delete Buttons in Table (Delegation)
+        $('#sections-table-body').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            const id = btn.dataset.id;
+
+            if (btn.classList.contains('btn-edit')) {
+                // Find data in local state to populate form
+                const item = (state.sections.results || state.sections).find(s => s.id == id);
+                if (item) openModal('edit', item);
+            }
+            else if (btn.classList.contains('btn-delete')) {
+                deleteSection(id);
+            }
+        });
     });
 
 })();
