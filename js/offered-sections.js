@@ -146,6 +146,7 @@
                     <span style="color:#888; font-size:0.9em;">(${sec.course})</span>
                 </td>
                 <td>${sec.instructor || '-'}</td>
+                <td>${sec.term || '-'}</td>
                 <td>${sec.capacity}</td>
                 <td style="font-size: 0.9em;">${meetingStr}</td>
                 <td>
