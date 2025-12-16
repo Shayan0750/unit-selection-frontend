@@ -1,10 +1,10 @@
 (() => {
     const API_BASE_URL = "http://127.0.0.1:8000/api/";
-    // to be changed later into "student-sections/"
     const SECTIONS_API = API_BASE_URL + "sections/";
+    const COURSES_LIST_API = API_BASE_URL + "courses/";
     const REFRESH_URL = API_BASE_URL + "token/refresh/";
 
-    // 1. دیکشنری برای ترجمه Enums به متن فارسی
+    // 1. دیکشنری برای ترجمه Enums به متن فارسی (بدون تغییر)
     const DayMap = {
         'SA': 'شنبه', 'SU': 'یکشنبه', 'MO': 'دوشنبه',
         'TU': 'سه‌شنبه', 'WE': 'چهارشنبه', 'TH': 'پنجشنبه', 'FR': 'جمعه'
@@ -18,7 +18,7 @@
         '16-18': '۱۶:۰۰ - ۱۸:۰۰'
     };
 
-    // 2. توابع کمکی Auth (استاندارد پروژه شما)
+    // 2. توابع کمکی Auth (استاندارد)
     function tokens() {
         return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') };
     }
@@ -56,15 +56,37 @@
                 opts.headers['Authorization'] = `Bearer ${newAccess}`;
                 res = await fetch(url, opts);
             } else {
-                window.location.href = 'login.html'; // ریدایرکت در صورت عدم اعتبار
+                window.location.href = 'login.html';
                 return null;
             }
         }
         return res;
     }
 
-    // 3. منطق دریافت و نمایش بخش‌ها
+    // 3. منطق داده‌ها
     let allSections = []; // ذخیره برای جستجو
+    let courseMap = {};   // مپ کد درس -> نام درس
+
+    // تابع جدید: بارگذاری لیست دروس و ساخت مپ
+    async function loadCoursesAndMap() {
+        try {
+            const res = await fetchWithAuth(COURSES_LIST_API);
+            if (!res || !res.ok) throw new Error("خطا در دریافت لیست دروس");
+
+            const courses = await res.json();
+            courses.forEach(c => {
+                courseMap[c.code] = c.title;
+            });
+        } catch (err) {
+            console.error('Failed to load courses:', err);
+        }
+    }
+
+    function getCourseTitle(code) {
+        // اگر نام درس در مپ موجود بود، نام را برمی‌گرداند. در غیر این صورت، همان کد را برمی‌گرداند.
+        return courseMap[code] || code;
+    }
+
 
     async function loadSections() {
         const tbody = document.getElementById('sections-table-body');
@@ -73,11 +95,15 @@
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">در حال بارگذاری...</td></tr>';
 
         try {
+            // ابتدا باید لیست دروس لود شود
+            await loadCoursesAndMap();
+
+            // سپس لیست بخش‌ها لود شود
             const res = await fetchWithAuth(SECTIONS_API);
-            if (!res || !res.ok) throw new Error("خطا در دریافت اطلاعات");
+            if (!res || !res.ok) throw new Error("خطا در دریافت اطلاعات بخش‌ها");
 
             const data = await res.json();
-            allSections = data.results || data || []; // هندل کردن صفحه‌بندی احتمالی
+            allSections = data.results || data || [];
 
             renderSections(allSections);
 
@@ -102,8 +128,6 @@
         sections.forEach(sec => {
             const tr = document.createElement('tr');
 
-            // فرمت کردن Meetings
-            // مثال خروجی: شنبه ۰۸:۰۰ - ۱۰:۰۰ (کلاس 101)
             let meetingStr = '---';
             if (sec.meetings && sec.meetings.length > 0) {
                 meetingStr = sec.meetings.map(m => {
@@ -113,9 +137,15 @@
                 }).join('');
             }
 
+            // نمایش نام درس در کنار کد درس
+            const courseTitle = getCourseTitle(sec.course);
+
             tr.innerHTML = `
                 <td>${sec.id}</td>
-                <td style="font-weight:bold;">${sec.course}</td>
+                <td>
+                    <span style="font-weight:bold;">${courseTitle}</span><br>
+                    <span style="color:#888; font-size:0.9em;">(${sec.course})</span>
+                </td>
                 <td>${sec.instructor || '-'}</td>
                 <td>${sec.capacity}</td>
                 <td style="font-size: 0.9em;">${meetingStr}</td>
@@ -127,13 +157,17 @@
         });
     }
 
-    // 4. منطق جستجو (فیلتر کلاینت‌ساید)
+    // 4. منطق جستجو (جستجو در کد درس و نام درس)
     function handleSearch(e) {
         const term = e.target.value.toLowerCase();
 
         const filtered = allSections.filter(sec => {
-            // جستجو در نام درس (Course String)
-            return (sec.course && sec.course.toLowerCase().includes(term));
+            const courseTitle = getCourseTitle(sec.course);
+            // جستجو در کد درس یا نام درس
+            return (
+                (sec.course && sec.course.toLowerCase().includes(term)) ||
+                (courseTitle && courseTitle.toLowerCase().includes(term))
+            );
         });
 
         renderSections(filtered);
@@ -141,6 +175,7 @@
 
     // 5. اجرا هنگام لود
     document.addEventListener('DOMContentLoaded', () => {
+        // بارگذاری متوالی: ابتدا نام دروس، سپس بخش‌ها
         loadSections();
 
         const searchInput = document.getElementById('course-search');
