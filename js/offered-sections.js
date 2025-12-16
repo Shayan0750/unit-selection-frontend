@@ -149,9 +149,6 @@
                 <td>${sec.term || '-'}</td>
                 <td>${sec.capacity}</td>
                 <td style="font-size: 0.9em;">${meetingStr}</td>
-                <td>
-                    <button class="btn btn-sm btn-success" id="saveSectionBtn" onclick="alert('اخذ درس ${sec.id} انجام شد (شبیه‌سازی)')">اخذ درس</button>
-                </td>
             `;
             tbody.appendChild(tr);
         });
