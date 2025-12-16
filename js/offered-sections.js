@@ -141,7 +141,6 @@
             const courseTitle = getCourseTitle(sec.course);
 
             tr.innerHTML = `
-                <td>${sec.id}</td>
                 <td>
                     <span style="font-weight:bold;">${courseTitle}</span><br>
                     <span style="color:#888; font-size:0.9em;">(${sec.course})</span>
