@@ -1,6 +1,6 @@
 (() => {
     const API_BASE_URL = "http://127.0.0.1:8000/api/";
-    const SECTIONS_API = API_BASE_URL + "sections/";
+    const SECTIONS_API = API_BASE_URL + "student-sections/?term=1";
     const COURSES_LIST_API = API_BASE_URL + "courses/";
     const REFRESH_URL = API_BASE_URL + "token/refresh/";
 
