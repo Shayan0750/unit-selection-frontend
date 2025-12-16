@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>section crud</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <div data-include="../partials/header.html"></div>
+
+    <aside class="sidebar" id="sidebarFragment">
+        <nav>
+            <ul class="nav">
+                <li><a href="admin-dashboard.html" data-link="dashboard">داشبورد</a></li>
+                <li><a href="admin-crud.html" data-link="courses">مدیریت دروس</a></li>
+                <li><a href="section-crud.html" data-link="section">section</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>مدیریت بخش‌های درسی (Sections)</h2>
+            <button class="btn btn-primary" id="addSectionBtn">
+                <i class="fa fa-plus"></i> افزودن بخش جدید
+            </button>
+        </div>
+
+        <div class="card">
+            <table class="course-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>درس</th>
+                        <th>ظرفیت</th>
+                        <th>زمان‌بندی (روز / ساعت / کلاس)</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="sections-table-body">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modal-backdrop hide" id="sectionModal">
+            <div class="modal-card">
+                <h3><span id="modal-title">افزودن بخش</span></h3>
+
+                <p id="formMsg"
+                    style="display:none; color: white; background: #dc3545; padding: 10px; border-radius: 4px;"></p>
+
+                <form id="sectionForm">
+                    <input type="hidden" id="section-id">
+
+                    <label for="course-select">درس:</label>
+                    <select id="course-select" name="course" required>
+                        <option value="">در حال بارگذاری...</option>
+                    </select>
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <div style="flex: 1;">
+                            <label>استاد (Locked):</label>
+                            <input type="text" value="1" disabled style="background: #e9ecef; cursor: not-allowed;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label>ترم (Locked):</label>
+                            <input type="text" value="1" disabled style="background: #e9ecef; cursor: not-allowed;">
+                        </div>
+                    </div>
+
+                    <label for="capacity-input" style="margin-top: 10px;">ظرفیت:</label>
+                    <input type="number" id="capacity-input" name="capacity" min="0" max="32767" required>
+
+                    <fieldset class="form-fieldset"
+                        style="margin-top: 20px; border: 1px solid #ced4da; padding: 15px; border-radius: 4px;">
+                        <legend style="width: auto; padding: 0 5px; font-size: 0.9em; font-weight: bold;">برنامه زمانی
+                        </legend>
+
+                        <div id="meetings-container">
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="addMeetingBtn"
+                            style="margin-top: 10px;">
+                            + افزودن زمان‌بندی
+                        </button>
+                    </fieldset>
+
+                    <div class="form-actions"
+                        style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="submit" class="btn btn-success" id="saveSectionBtn">ذخیره</button>
+                        <button type="button" class="btn btn-secondary" id="cancelSectionBtn">لغو</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <template id="meetingRowTemplate">
+            <div class="meeting-row"
+                style="display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                <input type="hidden" name="meeting_id">
+                <div style="flex: 1;">
+                    <label style="font-size: 12px; margin-bottom: 2px;">روز</label>
+                    <select name="day" required style="width: 100%; padding: 5px;">
+                    </select>
+                </div>
+
+                <div style="flex: 1;">
+                    <label style="font-size: 12px; margin-bottom: 2px;">ساعت</label>
+                    <select name="time_slot" required style="width: 100%; padding: 5px;">
+                    </select>
+                </div>
+
+                <div style="width: 80px;">
+                    <label style="font-size: 12px; margin-bottom: 2px;">کلاس</label>
+                    <input type="text" name="room_id" maxlength="3" required placeholder="101"
+                        style="width: 100%; padding: 5px;">
+                </div>
+
+                <button type="button" class="btn btn-danger remove-meeting-btn"
+                    style="padding: 5px 10px; height: 32px;">×</button>
+            </div>
+        </template>
+    </main>
+
+    <div data-include="../partials/footer.html"></div>
+
+    <script src="../js/dashboard.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/section.js"></script>
+</body>
+
+</html>
