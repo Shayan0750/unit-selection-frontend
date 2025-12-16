@@ -8587,6 +8587,11 @@ a:hover { text-decoration: underline; }
   border: 1px solid rgba(0,0,0,0.03);
 }
 
+main.main {
+  padding: 1rem;
+  padding-bottom: 4rem; /* فاصله بین کارت‌ها و فوتر */
+}
+
 /* سرصفحه کارتی */
 .card h2 { margin: 0 0 .4rem 0; font-size: 1.15rem; }
 .card h3 { margin: 0 0 .35rem 0; font-size: 1rem; }
