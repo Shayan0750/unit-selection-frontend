@@ -140,7 +140,7 @@
         $('#formMsg').style.display = 'none';
 
         $('#sectionForm').dataset.mode = mode;
-        $('#modal-title').textContent = mode === 'add' ? 'افزودن بخش جدید' : 'ویرایش بخش';
+        $('#modal-title').textContent = mode === 'add' ? 'افزودن سکشن جدید' : 'ویرایش سکشن';
 
         // Load Course Options
         const courseSelect = $('#course-select');
@@ -200,7 +200,7 @@
 
         tbody.innerHTML = '';
         if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">هیچ بخشی یافت نشد</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">هیچ سکشنی یافت نشد</td></tr>';
             return;
         }
 
@@ -305,7 +305,7 @@
 
     // Delete Handler
     async function deleteSection(id) {
-        if (!confirm("آیا از حذف این بخش مطمئن هستید؟")) return;
+        if (!confirm("آیا از حذف این سکشن مطمئن هستید؟")) return;
 
         const res = await fetchWithAuth(`${URLS.SECTIONS}${id}/`, { method: 'DELETE' });
         if (res.ok) {

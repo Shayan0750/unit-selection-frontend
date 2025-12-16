@@ -17,16 +17,16 @@
             <ul class="nav">
                 <li><a href="admin-dashboard.html" data-link="dashboard">داشبورد</a></li>
                 <li><a href="admin-crud.html" data-link="courses">مدیریت دروس</a></li>
-                <li><a href="section-crud.html" data-link="section">section</a></li>
+                <li><a href="section-crud.html" data-link="section">مدیریت سکشن ها</a></li>
             </ul>
         </nav>
     </aside>
 
     <main class="main">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>مدیریت بخش‌های درسی (Sections)</h2>
+            <h2>مدیریت سکشن ها</h2>
             <button class="btn btn-primary" id="addSectionBtn">
-                <i class="fa fa-plus"></i> افزودن بخش جدید
+                <i class="fa fa-plus"></i> افزودن سکشن جدید
             </button>
         </div>
 
@@ -48,7 +48,7 @@
 
         <div class="modal-backdrop hide" id="sectionModal">
             <div class="modal-card">
-                <h3><span id="modal-title">افزودن بخش</span></h3>
+                <h3><span id="modal-title">افزودن سکشن</span></h3>
 
                 <p id="formMsg"
                     style="display:none; color: white; background: #dc3545; padding: 10px; border-radius: 4px;"></p>
@@ -92,7 +92,7 @@
                     <div class="form-actions"
                         style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
                         <button type="submit" class="btn btn-success" id="saveSectionBtn">ذخیره</button>
-                        <button type="button" class="btn btn-secondary" id="cancelSectionBtn">لغو</button>
+                        <button type="button" class="btn btn-secondary" id="cancelSectionBtn">انصراف</button>
                     </div>
                 </form>
             </div>
