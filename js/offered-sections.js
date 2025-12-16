@@ -1,172 +1,152 @@
-const API_BASE_URL = "http://127.0.0.1:8000/api/";
-const REFRESH_URL = API_BASE_URL + "token/refresh/"; 
-const $ = s => document.querySelector(s);
+(() => {
+    const API_BASE_URL = "http://127.0.0.1:8000/api/";
+    // to be changed later into "student-sections/"
+    const SECTIONS_API = API_BASE_URL + "sections/";
+    const REFRESH_URL = API_BASE_URL + "token/refresh/";
 
-// ۱. توابع احراز هویت
+    // 1. دیکشنری برای ترجمه Enums به متن فارسی
+    const DayMap = {
+        'SA': 'شنبه', 'SU': 'یکشنبه', 'MO': 'دوشنبه',
+        'TU': 'سه‌شنبه', 'WE': 'چهارشنبه', 'TH': 'پنجشنبه', 'FR': 'جمعه'
+    };
 
-// خواندن access و refresh token از localStorage
-function tokens(){ 
-    return { 
-        access: localStorage.getItem('access'), 
-        refresh: localStorage.getItem('refresh') 
-    }; 
-}
+    const TimeMap = {
+        '8-10': '۰۸:۰۰ - ۱۰:۰۰',
+        '10-12': '۱۰:۰۰ - ۱۲:۰۰',
+        '12-14': '۱۲:۰۰ - ۱۴:۰۰',
+        '14-16': '۱۴:۰۰ - ۱۶:۰۰',
+        '16-18': '۱۶:۰۰ - ۱۸:۰۰'
+    };
 
-// تابع رفرش کردن توکن دسترسی
-async function refreshAccess(){
-    const t = tokens(); 
-    if(!t.refresh) return null; // اگر refresh token نباشد، کاری نمی‌کنیم
-    
-    try {
-        const r = await fetch(REFRESH_URL, { 
-            method:'POST', 
-            headers:{'Content-Type':'application/json'}, 
-            body: JSON.stringify({ refresh: t.refresh }) 
-        });
-        
-        if(!r.ok) return null;
-        const j = await r.json();
-        
-        if(j.access){ 
-            localStorage.setItem('access', j.access); 
-            if(j.refresh) localStorage.setItem('refresh', j.refresh); // اگر refresh هم عوض شد
-            return j.access; 
+    // 2. توابع کمکی Auth (استاندارد پروژه شما)
+    function tokens() {
+        return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') };
+    }
+
+    async function refreshAccess() {
+        const t = tokens();
+        if (!t.refresh) return null;
+        try {
+            const r = await fetch(REFRESH_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh: t.refresh })
+            });
+            if (!r.ok) return null;
+            const j = await r.json();
+            if (j.access) {
+                localStorage.setItem('access', j.access);
+                if (j.refresh) localStorage.setItem('refresh', j.refresh);
+                return j.access;
+            }
+        } catch (e) { console.warn(e); }
+        return null;
+    }
+
+    async function fetchWithAuth(url, opts = {}, retry = true) {
+        opts.headers = opts.headers || {};
+        const t = tokens();
+        if (t.access) opts.headers['Authorization'] = `Bearer ${t.access}`;
+
+        let res = await fetch(url, opts);
+
+        if (res.status === 401 && retry) {
+            const newAccess = await refreshAccess();
+            if (newAccess) {
+                opts.headers['Authorization'] = `Bearer ${newAccess}`;
+                res = await fetch(url, opts);
+            } else {
+                window.location.href = 'login.html'; // ریدایرکت در صورت عدم اعتبار
+                return null;
+            }
         }
-    } catch(e){ 
-        console.warn('Refresh failed:', e); 
+        return res;
     }
-    return null;
-}
 
-// تابع اصلی fetch با قابلیت افزودن Authorization Header و رفرش توکن
-async function fetchWithAuth(url, opts = {}, retry = true){
-    opts.headers = opts.headers || {};
-    let t = tokens(); 
+    // 3. منطق دریافت و نمایش بخش‌ها
+    let allSections = []; // ذخیره برای جستجو
 
-    // اضافه کردن توکن دسترسی به هدر
-    if(t.access) {
-        opts.headers['Authorization'] = `Bearer ${t.access}`;
+    async function loadSections() {
+        const tbody = document.getElementById('sections-table-body');
+        const noRes = document.getElementById('no-results');
+
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">در حال بارگذاری...</td></tr>';
+
+        try {
+            const res = await fetchWithAuth(SECTIONS_API);
+            if (!res || !res.ok) throw new Error("خطا در دریافت اطلاعات");
+
+            const data = await res.json();
+            allSections = data.results || data || []; // هندل کردن صفحه‌بندی احتمالی
+
+            renderSections(allSections);
+
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">خطا در برقراری ارتباط با سرور</td></tr>';
+        }
     }
-    opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
 
-    let res = await fetch(url, opts);
+    function renderSections(sections) {
+        const tbody = document.getElementById('sections-table-body');
+        const noRes = document.getElementById('no-results');
+        tbody.innerHTML = '';
 
-    // اگر 401 بود و هنوز تلاش مجدد انجام نشده بود، توکن را رفرش کن
-    if (res.status === 401 && retry) {
-        const newAccess = await refreshAccess();
-        if (newAccess) {
-            // توکن جدید را اضافه کرده و دوباره تلاش کن (تلاش مجدد=false)
-            opts.headers['Authorization'] = `Bearer ${newAccess}`;
-            res = await fetch(url, opts); // فراخوانی مجدد
-        } else {
-            // اگر رفرش توکن شکست خورد، کاربر را خارج کن
-            handleLogout(); 
+        if (sections.length === 0) {
+            noRes.style.display = 'block';
             return;
-        }
-    }
-
-    return res;
-}
-
-// ۲. منطق بارگذاری دروس (با توابع اصلاح شده)
-
-let allCourses = []; 
-
-function handleLogout() {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
-    localStorage.removeItem('userRole'); // کلید نقش کاربر
-    window.location.href = 'login.html';
-}
-
-async function loadCourses() {
-    const access = tokens().access; // چک کردن access token
-    const userRole = localStorage.getItem('userRole');
-
-    // AUTH GAURD (TO BE USED LATER)
-    // if (!access || userRole !== 'student') {
-    //     handleLogout(); // خروج و هدایت به صفحه لاگین
-    //     return;
-    // }
-
-    try {
-        // استفاده از fetchWithAuth برای مدیریت توکن
-        const res = await fetchWithAuth(API_BASE_URL + 'courses/');
-        
-        if (!res || !res.ok) { // اگر رسپانس نامعتبر بود یا 401 بعد از تلاش مجدد بود
-            const body = await res.json().catch(()=>null);
-            throw new Error((body && (body.message || body.detail)) || `HTTP ${res.status}`);
+        } else {
+            noRes.style.display = 'none';
         }
 
-        const data = await res.json();
-        allCourses = data.courses || data || []; 
-        renderCourses(allCourses);
+        sections.forEach(sec => {
+            const tr = document.createElement('tr');
 
-    } catch (err) {
-        console.error('Fetch error:', err);
-        const tbody = $('#courses-table-body');
-        if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">خطا در دریافت لیست دروس: ${err.message}. لطفاً مجدداً وارد شوید.</td></tr>`;
+            // فرمت کردن Meetings
+            // مثال خروجی: شنبه ۰۸:۰۰ - ۱۰:۰۰ (کلاس 101)
+            let meetingStr = '---';
+            if (sec.meetings && sec.meetings.length > 0) {
+                meetingStr = sec.meetings.map(m => {
+                    const day = DayMap[m.day] || m.day;
+                    const time = TimeMap[m.time_slot] || m.time_slot;
+                    return `<div style="margin-bottom:4px;">${day} ${time} <span style="color:#666; font-size:0.9em;">(کلاس ${m.room_id})</span></div>`;
+                }).join('');
+            }
+
+            tr.innerHTML = `
+                <td>${sec.id}</td>
+                <td style="font-weight:bold;">${sec.course}</td>
+                <td>${sec.instructor || '-'}</td>
+                <td>${sec.capacity}</td>
+                <td style="font-size: 0.9em;">${meetingStr}</td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="alert('اخذ درس ${sec.id} انجام شد (شبیه‌سازی)')">اخذ درس</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 4. منطق جستجو (فیلتر کلاینت‌ساید)
+    function handleSearch(e) {
+        const term = e.target.value.toLowerCase();
+
+        const filtered = allSections.filter(sec => {
+            // جستجو در نام درس (Course String)
+            return (sec.course && sec.course.toLowerCase().includes(term));
+        });
+
+        renderSections(filtered);
+    }
+
+    // 5. اجرا هنگام لود
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSections();
+
+        const searchInput = document.getElementById('course-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', handleSearch);
         }
-    }
-}
-
-// ۳. توابع رندر و جستجو (بدون تغییر در منطق)
-
-function renderCourses(courses) {
-    const tbody = $('#courses-table-body');
-    const noResults = $('#no-results');
-    if (!tbody) return; 
-
-    tbody.innerHTML = ''; 
-    noResults.style.display = (courses.length === 0) ? 'block' : 'none';
-
-    courses.forEach(course => {
-        const row = tbody.insertRow();
-        row.dataset.code = course.code; 
-        
-        // ... (منطق ساده شده درج سلول‌ها همانند قبل)
-        row.insertCell().textContent = course.title;
-        row.insertCell().textContent = course.code;
-        row.insertCell().textContent = course.units;
-        row.insertCell().textContent = course.department; 
-        
-        const prereqs = course.prerequisites ? course.prerequisites.map(p => p.name).join(', ') : 'ندارد';
-        row.insertCell().textContent = prereqs;
-    });
-}
-
-function handleSearch(e) {
-    const searchTerm = e.target.value.toLowerCase().trim();
-
-    if (searchTerm === '') {
-        renderCourses(allCourses);
-        return;
-    }
-
-    const filteredCourses = allCourses.filter(course => {
-        const nameMatch = course.title && course.title.toLowerCase().includes(searchTerm);
-        const codeMatch = course.code && course.code.toLowerCase().includes(searchTerm); 
-        return nameMatch || codeMatch;
     });
 
-    renderCourses(filteredCourses);
-}
-
-// ۴. رویدادها و شروع
-
-document.addEventListener('DOMContentLoaded', () => {
-    // اتصال event listener خروج
-    const logoutBtn = $('#logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-    
-    // اتصال event listener جستجو
-    const searchInput = $('#course-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', handleSearch);
-    }
-
-    loadCourses(); // بارگذاری دروس پس از اتصال رویدادها
-});
+})();
