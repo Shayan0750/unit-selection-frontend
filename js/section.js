@@ -6,12 +6,12 @@
     const URLS = {
         SECTIONS: API_BASE + "sections/",
         COURSES: API_BASE + "courses/",
+        INSTRUCTORS: API_BASE + "instructors/",
         REFRESH: API_BASE + "token/refresh/"
     };
 
     // Constants Locked
     const CONSTANTS = {
-        INSTRUCTOR_ID: 1, // Locked
         TERM_ID: 1        // Locked
     };
 
@@ -37,6 +37,7 @@
     // Global State
     let state = {
         courses: [], // To map Code -> Title
+        instructors: [], // Array of instructor objects
         sections: []
     };
 
@@ -129,6 +130,24 @@
         container.appendChild(row);
     }
 
+    // Populate Instructor Select
+    function populateInstructorSelect(instructorSelect, selectedId = null) {
+        instructorSelect.innerHTML = '<option value="">انتخاب استاد...</option>';
+        
+        state.instructors.forEach(instructor => {
+            const fullName = `${instructor.f_name} ${instructor.l_name}`;
+            const option = document.createElement('option');
+            option.value = instructor.id;
+            option.textContent = fullName;
+            
+            if (selectedId && instructor.id == selectedId) {
+                option.selected = true;
+            }
+            
+            instructorSelect.appendChild(option);
+        });
+    }
+
     // Open Modal
     function openModal(mode, data = {}) {
         const modal = $('#sectionModal');
@@ -149,9 +168,13 @@
             courseSelect.innerHTML += `<option value="${c.code}">${c.title} (${c.code})</option>`;
         });
 
+        // Load Instructor Options
+        const instructorSelect = $('#instructor-select');
+        populateInstructorSelect(instructorSelect, data.instructor);
+
         if (mode === 'edit') {
             $('#section-id').value = data.id;
-            $('#course-select').value = data.course; // Uses Course Code
+            $('#course-select').value = data.course;
             $('#capacity-input').value = data.capacity;
 
             // Populate meetings
@@ -177,7 +200,11 @@
             const cRes = await fetchWithAuth(URLS.COURSES);
             if (cRes.ok) state.courses = await cRes.json();
 
-            // 2. Fetch Sections for Table
+            // 2. Fetch Instructors for Dropdown
+            const iRes = await fetchWithAuth(URLS.INSTRUCTORS);
+            if (iRes.ok) state.instructors = await iRes.json();
+
+            // 3. Fetch Sections for Table
             await loadSections();
 
         } catch (e) {
@@ -187,20 +214,20 @@
 
     async function loadSections() {
         const tbody = $('#sections-table-body');
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">در حال بارگذاری...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">در حال بارگذاری...</td></tr>';
 
         const res = await fetchWithAuth(URLS.SECTIONS);
         if (!res || !res.ok) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red">خطا در دریافت اطلاعات</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red">خطا در دریافت اطلاعات</td></tr>';
             return;
         }
 
-        state.sections = await res.json(); // Usually an array, or { results: [] }
+        state.sections = await res.json();
         const list = Array.isArray(state.sections) ? state.sections : (state.sections.results || []);
 
         tbody.innerHTML = '';
         if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">هیچ سکشنی یافت نشد</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">هیچ سکشنی یافت نشد</td></tr>';
             return;
         }
 
@@ -208,6 +235,12 @@
             // Find Course Title based on Code
             const courseObj = state.courses.find(c => c.code === item.course);
             const courseTitle = courseObj ? courseObj.title : item.course;
+
+            // Find Instructor Name based on ID
+            const instructorObj = state.instructors.find(i => i.id === item.instructor);
+            const instructorName = instructorObj ? 
+                `${instructorObj.f_name} ${instructorObj.l_name}` : 
+                `استاد (ID: ${item.instructor})`;
 
             // Format Meetings string
             const meetingsStr = item.meetings.map(m =>
@@ -218,6 +251,7 @@
             tr.innerHTML = `
                 <td>${item.id}</td>
                 <td><b>${esc(courseTitle)}</b><br><small>${esc(item.course)}</small></td>
+                <td>${esc(instructorName)}</td>
                 <td>${esc(item.capacity)}</td>
                 <td style="font-size:0.9em">${meetingsStr}</td>
                 <td>
@@ -239,6 +273,7 @@
         const mode = $('#sectionForm').dataset.mode;
         const id = $('#section-id').value;
         const course = $('#course-select').value;
+        const instructor = $('#instructor-select').value;
         const capacity = parseInt($('#capacity-input').value);
 
         // 2. Collect Meetings Data
@@ -252,14 +287,14 @@
 
             if (day && time && room) {
                 let mObj = { day: day, time_slot: time, room_id: room };
-                if (mid && mode === 'edit') mObj.id = parseInt(mid); // Send ID only if editing
+                if (mid && mode === 'edit') mObj.id = parseInt(mid);
                 meetings.push(mObj);
             }
         });
 
         // 3. Validation
-        if (!course || isNaN(capacity)) {
-            msg.textContent = "لطفا درس و ظرفیت را انتخاب کنید";
+        if (!course || !instructor || isNaN(capacity)) {
+            msg.textContent = "لطفا درس، استاد و ظرفیت را انتخاب کنید";
             msg.style.display = 'block';
             return;
         }
@@ -269,12 +304,12 @@
             return;
         }
 
-        // 4. Construct Payload (Locked fields are hardcoded here)
+        // 4. Construct Payload
         const payload = {
             course: course,           // string code
+            instructor: parseInt(instructor), // integer (instructor ID)
             capacity: capacity,       // integer
-            instructor: CONSTANTS.INSTRUCTOR_ID, // Locked to 1
-            term: CONSTANTS.TERM_ID,             // Locked to 1
+            term: CONSTANTS.TERM_ID,  // Locked to 1
             meetings: meetings        // array of objects
         };
 

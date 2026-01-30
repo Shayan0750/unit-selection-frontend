@@ -37,6 +37,7 @@
                     <tr>
                         <th>ID</th>
                         <th>درس</th>
+                        <th>استاد</th>
                         <th>ظرفیت</th>
                         <th>زمان‌بندی (روز / ساعت / کلاس)</th>
                         <th>عملیات</th>
@@ -64,8 +65,10 @@
 
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <div style="flex: 1;">
-                            <label>استاد (Locked):</label>
-                            <input type="text" value="1" disabled style="background: #e9ecef; cursor: not-allowed;">
+                            <label for="instructor-select">استاد:</label>
+                            <select id="instructor-select" name="instructor" required>
+                                <option value="">در حال بارگذاری...</option>
+                            </select>
                         </div>
                         <div style="flex: 1;">
                             <label>ترم (Locked):</label>
