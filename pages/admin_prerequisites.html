@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <title>مدیریت پیش‌نیازها</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
     <div data-include="../partials/header.html"></div>
+    <aside class="sidebar" id="sidebarFragment">
+        <nav>
+            <ul class="nav">
+                <li><a href="admin-dashboard.html" data-link="dashboard">داشبورد</a></li>
+                <li><a href="admin-crud.html" data-link="courses">مدیریت دروس</a></li>
+                <li><a href="section-crud.html" data-link="section">مدیریت سکشن ها</a></li>
+            </ul>
+        </nav>
+    </aside>
 
     <main class="main">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -24,7 +35,7 @@
                     </tr>
                 </thead>
                 <tbody id="prereq-table-body">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </main>
@@ -32,8 +43,9 @@
     <div class="modal-backdrop hide" id="prereqModal">
         <div class="modal-card">
             <h3>تعریف پیش‌نیاز جدید</h3>
-            <p id="formMsg" style="display:none; background: #dc3545; color: white; padding: 10px; border-radius: 4px;"></p>
-            
+            <p id="formMsg" style="display:none; background: #dc3545; color: white; padding: 10px; border-radius: 4px;">
+            </p>
+
             <form id="prereqForm">
                 <label for="course-select">انتخاب درس اصلی:</label>
                 <select id="course-select" name="course" required>
@@ -53,6 +65,11 @@
         </div>
     </div>
 
+    <div data-include="../partials/footer.html"></div>
+
+
     <script src="../js/admin_prerequisites.js"></script>
+    <script src="../js/layout.js"></script>
 </body>
+
 </html>
