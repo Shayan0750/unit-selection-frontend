@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>برنامه هفتگی دانشجو</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/student.css">
+</head>
+
+<body>
+
+    <div data-include="../partials/header.html"></div>
+
+    <aside class="sidebar">
+        <nav>
+            <ul class="nav">
+                <li><a href="student-dashboard.html">داشبورد</a></li>
+                <li><a href="offered-courses.html">لیست دروس ارائه شده</a></li>
+                <li><a href="student-schedule.html" class="active">برنامه هفتگی</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <h2>برنامه هفتگی ترم جاری</h2>
+
+        <div class="schedule-container">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">ساعت</th>
+                        <th>شنبه</th>
+                        <th>یکشنبه</th>
+                        <th>دوشنبه</th>
+                        <th>سه‌شنبه</th>
+                        <th>چهارشنبه</th>
+                        <th>پنج‌شنبه</th>
+                        <th>جمعه</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="time-col">۰۸:۰۰ - ۱۰:۰۰</td>
+                        <td id="SA-8-10"></td>
+                        <td id="SU-8-10"></td>
+                        <td id="MO-8-10"></td>
+                        <td id="TU-8-10"></td>
+                        <td id="WE-8-10"></td>
+                        <td id="TH-8-10"></td>
+                        <td id="FR-8-10"></td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">۱۰:۰۰ - ۱۲:۰۰</td>
+                        <td id="SA-10-12"></td>
+                        <td id="SU-10-12"></td>
+                        <td id="MO-10-12"></td>
+                        <td id="TU-10-12"></td>
+                        <td id="WE-10-12"></td>
+                        <td id="TH-10-12"></td>
+                        <td id="FR-10-12"></td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">۱۲:۰۰ - ۱۴:۰۰</td>
+                        <td id="SA-12-14"></td>
+                        <td id="SU-12-14"></td>
+                        <td id="MO-12-14"></td>
+                        <td id="TU-12-14"></td>
+                        <td id="WE-12-14"></td>
+                        <td id="TH-12-14"></td>
+                        <td id="FR-12-14"></td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">۱۴:۰۰ - ۱۶:۰۰</td>
+                        <td id="SA-14-16"></td>
+                        <td id="SU-14-16"></td>
+                        <td id="MO-14-16"></td>
+                        <td id="TU-14-16"></td>
+                        <td id="WE-14-16"></td>
+                        <td id="TH-14-16"></td>
+                        <td id="FR-14-16"></td>
+                    </tr>
+                    <tr>
+                        <td class="time-col">۱۶:۰۰ - ۱۸:۰۰</td>
+                        <td id="SA-16-18"></td>
+                        <td id="SU-16-18"></td>
+                        <td id="MO-16-18"></td>
+                        <td id="TU-16-18"></td>
+                        <td id="WE-16-18"></td>
+                        <td id="TH-16-18"></td>
+                        <td id="FR-16-18"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div data-include="../partials/footer.html"></div>
+    <script src="../js/layout.js"></script>
+    <script src="../js/student-schedule.js"></script>
+</body>
+
+</html>
