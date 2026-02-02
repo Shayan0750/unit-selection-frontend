@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
-    <title> دروس ارائه شده </title>
+    <title>دروس ارائه شده</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/student.css">
 </head>
-
 <body>
 
     <div data-include="../partials/header.html"></div>
@@ -17,14 +15,14 @@
             <ul class="nav">
                 <li><a href="student-dashboard.html" id="dashboard-link">داشبورد</a></li>
                 <li><a href="student-offered-courses.html" class="active">دروس ارائه شده</a></li>
-                <li><a href="course-registeration.html">انتخاب واحد</a></li>
+                <li><a href="course-registeration.html" class="active">انتخاب واحد  </a></li>
                 <li><a href="student-registered-courses.html">دروس اخذ شده</a></li>
             </ul>
         </nav>
     </aside>
 
     <main class="main">
-        <h2> دروس ارائه شده نیمسال</h2>
+        <h2>دروس ارائه شده نیمسال</h2>
 
         <div id="search-section">
             <input type="text" id="course-search" placeholder="جستجو (بر اساس کد درس یا نام استاد)...">
@@ -39,9 +37,11 @@
                         <th>نیمسال</th>
                         <th>ظرفیت</th>
                         <th>زمان‌بندی (روز / ساعت / کلاس)</th>
+                        <th>عملیات</th>
                     </tr>
                 </thead>
                 <tbody id="sections-table-body">
+                    <!-- داده‌ها توسط JavaScript پر می‌شود -->
                 </tbody>
             </table>
             <p id="no-results" style="display: none; text-align: center; color: gray; margin-top: 15px;">
@@ -55,5 +55,4 @@
     <script src="../js/layout.js"></script>
     <script src="../js/offered-sections.js"></script>
 </body>
-
 </html>

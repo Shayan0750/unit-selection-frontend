@@ -201,23 +201,25 @@
 
         tbody.innerHTML = '';
         list.forEach(s => {
-            const c = state.courses.find(x => x.code === s.course);
-            const i = state.instructors.find(x => x.id === s.instructor);
-            const m = s.meetings.map(x => `${x.day} ${x.time_slot} (${x.room_id})`).join('<br>');
+    const c = state.courses.find(x => x.code === s.course);
+    const i = state.instructors.find(x => x.id === s.instructor);
+    const m = s.meetings.map(x => `${x.day} ${x.time_slot} (${x.room_id})`).join('<br>');
 
-            tbody.innerHTML += `
-                <tr>
-                    <td>${s.id}</td>
-                    <td>${esc(c?.title || s.course)}</td>
-                    <td>${esc(i ? i.f_name + ' ' + i.l_name : s.instructor)}</td>
-                    <td>${s.capacity}</td>
-                    <td>${m}</td>
-                    <td>
-                        <button class="btn-edit" data-id="${s.id}">ویرایش</button>
-                        <button class="btn-delete" data-id="${s.id}">حذف</button>
-                    </td>
-                </tr>`;
-        });
+    tbody.innerHTML += `
+        <tr>
+            <td>${s.id}</td>
+            <td>${esc(c?.title || s.course)}</td>
+            <td>${s.group_number ?? '-'}</td>
+            <td>${esc(i ? i.f_name + ' ' + i.l_name : s.instructor)}</td>
+            <td>${s.capacity}</td>
+            <td>${m}</td>
+            <td>
+                <button class="btn-edit" data-id="${s.id}">ویرایش</button>
+                <button class="btn-delete" data-id="${s.id}">حذف</button>
+            </td>
+        </tr>`;
+});
+
     }
 
     async function onFormSubmit(e) {
