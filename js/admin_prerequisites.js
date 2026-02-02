@@ -58,14 +58,14 @@
     async function loadPrerequisites() {
         const tbody = $('#prereq-table-body');
         tbody.innerHTML = '<tr><td colspan="4" class="text-center">در حال بارگذاری...</td></tr>';
-        
+
         try {
             const res = await fetchWithAuth(PREREQ_API);
             if (!res.ok) throw new Error();
-            
+
             const data = await res.json();
             const list = Array.isArray(data) ? data : (data.results || []);
-            
+
             tbody.innerHTML = '';
             if (list.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center">هیچ پیش‌نیازی تعریف نشده است.</td></tr>';
@@ -135,7 +135,7 @@
     $('#prereq-table-body').addEventListener('click', async (e) => {
         if (e.target.classList.contains('btn-delete')) {
             const id = e.target.dataset.id;
-            if (!confirm(`آیا از حذف پیش‌نیاز شماره ${id} مطمئن هستید؟`)) return;
+            if (!confirm(`آیا از حذف پیش‌نیاز مطمئن هستید؟`)) return;
 
             const res = await fetchWithAuth(`${PREREQ_API}${id}/`, { method: 'DELETE' });
             if (res.ok) {
