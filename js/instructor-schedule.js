@@ -1,7 +1,7 @@
 (() => {
     // --- تنظیمات API ---
     const API_BASE_URL = "http://127.0.0.1:8000/api/";
-    const SCHEDULE_API = API_BASE_URL + "student/program/";
+    const SCHEDULE_API = API_BASE_URL + "instructor/program/";
     const REFRESH_URL = API_BASE_URL + "token/refresh/";
 
     // --- توابع احراز هویت (Authentication) ---
@@ -134,7 +134,6 @@
 
                         card.innerHTML = `
                             <span class="class-title">${courseTitle}</span>
-                            <span class="class-info">👨‍🏫 ${instructorName}</span>
                             <span class="class-info">🚪 کلاس ${roomId}</span>
                             <span class="class-info" style="font-size:0.7em; opacity:0.7">(${courseCode})</span>
                         `;
