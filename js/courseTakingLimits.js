@@ -1,125 +1,107 @@
 (() => {
-  const API_URL = "http://127.0.0.1:8000/api/unit_limits/1/"; // چون همیشه id=1 است
-  const REFRESH_URL = "http://127.0.0.1:8000/api/token/refresh/";
+  const BASE_URL = "http://127.0.0.1:8000/api/unit_limits/";
+  let unitLimitId = null;
 
   const minInput = document.getElementById("minUnits");
   const maxInput = document.getElementById("maxUnits");
   const errMin = document.getElementById("errMinUnits");
   const errMax = document.getElementById("errMaxUnits");
-  const formMsg = document.getElementById("unitLimitsMsg");
+  const msg = document.getElementById("unitLimitsMsg");
   const form = document.getElementById("unitLimitsForm");
 
-  // --- توابع کمکی ---
-  function getToken() {
-    return localStorage.getItem("access");
-  }
-
-  function setToken(token) {
-    localStorage.setItem("access", token);
-  }
-
-  function showMsg(msg, isError = true) {
-    formMsg.textContent = msg;
-    formMsg.style.color = isError ? "red" : "green";
-    formMsg.classList.add("show");
-  }
-
-  function clearMsg() {
-    formMsg.textContent = "";
-    formMsg.classList.remove("show");
-  }
-
-  function clearFieldErrors() {
+  function resetMessages() {
     errMin.textContent = "";
     errMax.textContent = "";
+    msg.textContent = "";
+    msg.style.color = "red";
   }
 
-// fetch با اتچ کردن توکن و رفرش اتوماتیک
-async function fetchWithAuth(url, options = {}) {
-    const accessToken = localStorage.getItem("access");
-    if (!options.headers) options.headers = {};
-    options.headers["Content-Type"] = "application/json";
-    if (accessToken) options.headers["Authorization"] = "Bearer " + accessToken;
+  function showSuccess(text) {
+    msg.textContent = text;
+    msg.style.color = "green";
+  }
 
-    let response = await fetch(url, options);
+  function showError(text) {
+    msg.textContent = text;
+    msg.style.color = "red";
+  }
 
-    if (response.status === 401) { // Unauthorized
-        // تلاش برای رفرش توکن
-        const refreshToken = localStorage.getItem("refresh");
-        if (refreshToken) {
-            const refreshRes = await fetch("/api/token/refresh/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refresh: refreshToken })
-            });
-            if (refreshRes.ok) {
-                const data = await refreshRes.json();
-                localStorage.setItem("access", data.access);
-                options.headers["Authorization"] = "Bearer " + data.access;
-                response = await fetch(url, options); // دوباره تلاش
-            }
-        }
-    }
-    return response;
-}
+  async function fetchWithAuth(url, options = {}) {
+    const token = localStorage.getItem("access");
+    options.headers = {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: "Bearer " + token }),
+    };
+    return fetch(url, options);
+  }
 
-
-
-  // --- بارگذاری مقادیر اولیه ---
+  // ---------- LOAD ----------
   async function loadUnitLimits() {
     try {
-      const res = await fetchWithAuth(API_URL);
-      if (!res.ok) throw new Error("Failed to fetch unit limits");
+      const res = await fetchWithAuth(BASE_URL);
+
+      if (!res.ok) return;
+
       const data = await res.json();
-      minInput.value = data.min_units;
-      maxInput.value = data.max_units;
-    } catch (err) {
-      showMsg("خطا در بارگذاری محدودیت‌ها: " + err.message);
+
+      if (Array.isArray(data) && data.length > 0) {
+        unitLimitId = data[0].id;
+        minInput.value = data[0].min_units;
+        maxInput.value = data[0].max_units;
+      }
+    } catch {
+      showError("خطا در بارگذاری محدودیت‌ها");
     }
   }
 
-  // --- ثبت فرم ---
+  // ---------- SUBMIT ----------
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    clearMsg();
-    clearFieldErrors();
+    resetMessages();
 
     const payload = {
       min_units: Number(minInput.value),
       max_units: Number(maxInput.value),
     };
 
+    const isUpdate = unitLimitId !== null;
+    const url = isUpdate ? `${BASE_URL}${unitLimitId}/` : BASE_URL;
+    const method = isUpdate ? "PUT" : "POST";
+
     try {
-      const res = await fetchWithAuth(API_URL, {
-        method: "PUT", // چون id=1 همیشه
-        headers: { "Content-Type": "application/json" },
+      const res = await fetchWithAuth(url, {
+        method,
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {}
 
+      // ---------- خطا ----------
       if (!res.ok) {
-        // نمایش پیام خطای فیلدها
-        if (data.min_units) errMin.textContent = data.min_units.join(", ");
-        if (data.max_units) errMax.textContent = data.max_units.join(", ");
-        // نمایش پیام کلی فرم
-        const msgParts = [];
+        if (res.status === 401) {
+          showError("احراز هویت نامعتبر است. دوباره وارد شوید.");
+          return;
+        }
 
-        if (msgParts.length) showMsg(msgParts.join(" | "));
-      } else {
-        showMsg("محدودیت‌ها با موفقیت ثبت شدند.", false);
+        if (data.min_units) errMin.textContent = data.min_units.join("، ");
+        if (data.max_units) errMax.textContent = data.max_units.join("، ");
+
+        if (!data.min_units && !data.max_units) {
+          showError("ثبت اطلاعات با خطا مواجه شد.");
+        }
+        return;
       }
-    } catch (err) {
-      showMsg("خطا در ثبت محدودیت‌ها: " + err.message);
+
+      // ---------- موفقیت ----------
+      unitLimitId = data.id;
+      showSuccess("محدودیت واحدها با موفقیت ذخیره شد.");
+    } catch {
+      showError("خطای ارتباط با سرور");
     }
   });
 
-  // --- پاک کردن فرم ---
-  form.addEventListener("reset", () => {
-    clearMsg();
-    clearFieldErrors();
-  });
-
-  // بارگذاری اولیه
   loadUnitLimits();
 })();

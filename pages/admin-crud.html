@@ -91,38 +91,46 @@
       </div>
     </div>
 
-    <!-- کارت سایر  -->
-    <div class="card" style="margin-top:1rem; padding:1rem;">
+    <!-- کارت محدودیت واحد -->
+<div class="card unit-limits-card">
 
-      <!-- عنوان کارت -->
-      <h2 style="margin-bottom:1rem; border-bottom:1px solid #ddd; padding-bottom:0.5rem;">
-        سایر مدیریت ها
-      </h2>
+  <h2 class="card-title">مدیریت محدودیت اخذ واحد</h2>
 
-      <!-- فرم فیلدها -->
-      <form id="unitLimitsForm" autocomplete="off" novalidate>
+  <form id="unitLimitsForm" class="unit-limits-form" autocomplete="off" novalidate>
 
-        <div class="form-group" style="margin-bottom:1rem;">
-          <label for="minUnits">حداقل تعداد واحد قابل اخذ</label>
-          <input id="minUnits" type="number" min="0" class="form-control" placeholder="مقدار مجاز کمتر از 14" />
-          <div id="errMinUnits" class="text-danger small"></div>
-        </div>
-
-        <div class="form-group" style="margin-bottom:1rem;">
-          <label for="maxUnits">حداکثر تعداد واحد قابل اخذ</label>
-          <input id="maxUnits" type="number" min="0" class="form-control" placeholder="مقدار مجاز از 14 تا 26 " />
-          <div id="errMaxUnits" class="text-danger small"></div>
-        </div>
-
-        <div class="form-actions" style="margin-top:1rem;">
-          <button type="reset" class="btn btn-outline">پاک کردن</button>
-          <button type="submit" class="btn btn-primary">ثبت</button>
-        </div>
-
-        <div id="unitLimitsMsg" class="form-msg small" style="margin-top:0.5rem;"></div>
-      </form>
-
+    <div class="form-group">
+      <label for="minUnits">حداقل تعداد واحد قابل اخذ</label>
+      <input
+        id="minUnits"
+        type="number"
+        min="0"
+        class="form-control"
+        placeholder="مثلاً 14"
+      />
+      <div id="errMinUnits" class="field-error"></div>
     </div>
+
+    <div class="form-group">
+      <label for="maxUnits">حداکثر تعداد واحد قابل اخذ</label>
+      <input
+        id="maxUnits"
+        type="number"
+        min="0"
+        class="form-control"
+        placeholder="مثلاً 26"
+      />
+      <div id="errMaxUnits" class="field-error"></div>
+    </div>
+
+    <div class="form-actions">
+      <button type="reset" class="btn btn-outline">پاک کردن</button>
+      <button type="submit" class="btn btn-primary">ثبت</button>
+    </div>
+
+    <div id="unitLimitsMsg" class="form-message"></div>
+
+  </form>
+</div>
 
   </main>
 
