@@ -8874,3 +8874,56 @@ button, .btn, li { text-align: center; }
 }
 
 
+/* استایل اختصاصی برای جدول برنامه */
+.schedule-container {
+overflow-x: auto;
+background: white;
+border-radius: 8px;
+box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+padding: 20px;
+}
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.schedule-table th, .schedule-table td {
+  border: 1px solid #dee2e6;
+  text-align: center;
+  padding: 10px;
+  vertical-align: top;
+  width: 14%; /* 7 روز + ستون ساعت */
+  height: 100px; /* ارتفاع ثابت برای سلول‌ها */
+}
+.schedule-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: #495057;
+}
+.time-col {
+  background-color: #e9ecef;
+  font-weight: bold;
+  width: 80px !important;
+  vertical-align: middle !important;
+}
+
+/* استایل کارت درس داخل تقویم */
+.class-card {
+  background-color: #e3f2fd; /* رنگ پیش‌فرض */
+  border-left: 4px solid #2196f3;
+  color: #0d47a1;
+  padding: 5px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  text-align: right;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+.class-card:hover {
+  transform: scale(1.02);
+  z-index: 5;
+  position: relative;
+}
+.class-title { font-weight: bold; display: block; }
+.class-info { font-size: 0.8em; display: block; margin-top: 2px; }
