@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-
     /* ------------------ CONFIG ------------------ */
     const API_LOGIN_ENDPOINT = 'http://127.0.0.1:8000/api/token/';
     const ADMIN_DASHBOARD_PAGE = 'admin-dashboard.html';
@@ -110,7 +109,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Save user info to localStorage
             localStorage.setItem('role', role);
+            localStorage.setItem('user_id', payload.user_id || '');
+            localStorage.setItem('username', payload.username || '');
+            localStorage.setItem('first_name', payload.first_name || '');
+            localStorage.setItem('last_name', payload.last_name || '');
+            
+            // اگر instructor_id در JWT هست، ذخیره کن
+            if (payload.instructor_id) {
+                localStorage.setItem('instructor_id', payload.instructor_id);
+            }
+
+            console.log('User info saved:', {
+                user_id: payload.user_id,
+                username: payload.username,
+                role: role,
+                instructor_id: payload.instructor_id
+            });
 
             /* ------------------ REDIRECT ------------------ */
             if (role === 'admin') {
@@ -133,5 +149,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
-
 });
