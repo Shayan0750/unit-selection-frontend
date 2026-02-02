@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>مدیریت پیش‌نیازها</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div data-include="../partials/header.html"></div>
+    <aside class="sidebar" id="sidebarFragment">
+        <nav>
+            <ul class="nav">
+                <li><a href="admin-dashboard.html" data-link="dashboard">داشبورد</a></li>
+                <li><a href="admin-crud.html" data-link="courses">مدیریت دروس</a></li>
+                <li><a href="section-crud.html" data-link="section">مدیریت سکشن ها</a></li>
+                <li><a href="admin_prerequisites.html" data-link="section">مدیریت پیش‌نیازها</a></li>
+
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>مدیریت پیش‌نیازهای دروس</h2>
+            <button class="btn btn-primary" id="addPrereqBtn">افزودن پیش‌نیاز جدید</button>
+        </div>
+
+        <div class="card">
+            <table class="course-table">
+                <thead>
+                    <tr>
+                        <th>درس اصلی</th>
+                        <th>درس پیش‌نیاز</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="prereq-table-body">
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div class="modal-backdrop hide" id="prereqModal">
+        <div class="modal-card">
+            <h3>تعریف پیش‌نیاز جدید</h3>
+            <p id="formMsg" style="display:none; background: #dc3545; color: white; padding: 10px; border-radius: 4px;">
+            </p>
+
+            <form id="prereqForm">
+                <label for="course-select">انتخاب درس اصلی:</label>
+                <select id="course-select" name="course" required>
+                    <option value="">در حال بارگذاری دروس...</option>
+                </select>
+
+                <label for="prereq-select">انتخاب درس پیش‌نیاز:</label>
+                <select id="prereq-select" name="prereq_course" required>
+                    <option value="">در حال بارگذاری دروس...</option>
+                </select>
+
+                <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success" id="savePrereqBtn">ذخیره</button>
+                    <button type="button" class="btn btn-secondary" id="cancelPrereqBtn">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div data-include="../partials/footer.html"></div>
+
+
+    <script src="../js/admin_prerequisites.js"></script>
+    <script src="../js/layout.js"></script>
+</body>
+
+</html>
