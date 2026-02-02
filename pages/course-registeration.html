@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <title>دروس ارائه شده</title>
+    <title>انتخاب واحد دانشجو</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/student.css">
 </head>
+
 <body>
 
     <div data-include="../partials/header.html"></div>
@@ -15,7 +17,7 @@
             <ul class="nav">
                 <li><a href="student-dashboard.html" id="dashboard-link">داشبورد</a></li>
                 <li><a href="student-offered-courses.html" class="active">دروس ارائه شده</a></li>
-                <li><a href="course-registeration.html" class="active">انتخاب واحد  </a></li>
+                <li><a href="course-registeration.html">انتخاب واحد</a></li>
                 <li><a href="student-registered-courses.html">دروس اخذ شده</a></li>
             </ul>
         </nav>
@@ -34,18 +36,38 @@
                     <tr>
                         <th>درس</th>
                         <th>استاد</th>
-                        <th>نیمسال</th>
+                        <th>شماره گروه</th>
                         <th>ظرفیت</th>
-                        <th>زمان‌بندی (روز / ساعت / کلاس)</th>
+                        <th>زمان‌بندی</th>
                         <th>عملیات</th>
                     </tr>
                 </thead>
                 <tbody id="sections-table-body">
-                    <!-- داده‌ها توسط JavaScript پر می‌شود -->
                 </tbody>
             </table>
             <p id="no-results" style="display: none; text-align: center; color: gray; margin-top: 15px;">
                 موردی یافت نشد.
+            </p>
+        </div>
+
+        <h2 style="margin-top: 30px;">دروس اخذ شده</h2>
+        <div id="enrolled-list-container" class="card">
+            <table class="course-table">
+                <thead>
+                    <tr>
+                        <th>درس</th>
+                        <th>استاد</th>
+                        <th>شماره گروه</th>
+                        <th>نیمسال</th>
+                        <th>زمان‌بندی</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody id="enrolled-table-body">
+                </tbody>
+            </table>
+            <p id="no-enrolled" style="display: none; text-align: center; color: gray; margin-top: 15px;">
+                هنوز درسی اخذ نکرده‌اید.
             </p>
         </div>
     </main>
@@ -53,6 +75,7 @@
     <div data-include="../partials/footer.html"></div>
 
     <script src="../js/layout.js"></script>
-    <script src="../js/offered-sections.js"></script>
+    <script src="../js/course-registeration.js"></script>
 </body>
+
 </html>
