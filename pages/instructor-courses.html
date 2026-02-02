@@ -1,63 +1,93 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>دروس من</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/student.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>دروس من</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/student.css">
+<style>
+/* ===== Page Header ===== */
+.page-header { padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+/* ===== Term Select ===== */
+.term-select {
+  min-width: 200px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.term-select:hover { border-color: #0d6efd; }
+.term-select:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13,110,253,0.15);
+}
+/* ===== Badge ===== */
+.badge-counter { font-size: 0.85rem; padding: 8px 14px; border-radius: 20px; }
+/* ===== Table ===== */
+.table thead th { font-weight: 600; color: #495057; }
+.table tbody tr:hover { background-color: #f8f9fa; }
+</style>
 </head>
 <body>
-    <div data-include="../partials/header.html"></div>
+<div data-include="../partials/header.html"></div>
 
-    <aside class="sidebar" id="sidebarFragment">
-        <nav>
-            <ul class="nav">
-                <li><a href="instructor-dashboard.html">داشبورد</a></li>
-                <li><a href="instructor-courses.html" class="active">دروس شما</a></li>
-            </ul>
-        </nav>
-    </aside>
+<aside class="sidebar" id="sidebarFragment">
+<nav>
+  <ul class="nav">
+    <li><a href="instructor-dashboard.html">داشبورد</a></li>
+    <li><a href="instructor-courses.html" class="active">دروس شما</a></li>
+  </ul>
+</nav>
+</aside>
 
-    <main class="main">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 id="page-title">دروس شما</h2>
-                <p class="text-muted mb-0">
-                    لیست دروس نیمسال شما     
-                </p>
-            </div>
-            <span id="section-count" class="badge bg-primary fs-6 p-2">0 درس</span>
-        </div>
+<main class="main">
+  <!-- ===== Header ===== -->
+  <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+    <div>
+      <h2 id="page-title" class="mb-1">دروس شما</h2>
+      <p class="text-muted mb-0">لیست دروس ارائه‌شده در نیمسال انتخابی</p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <select id="term-select" class="term-select">
+        <option value="">انتخاب نیمسال...</option>
+      </select>
+      <span id="section-count" class="badge bg-primary badge-counter">۰ درس</span>
+    </div>
+  </div>
 
-        <div class="card">
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th width="10%">شماره</th>
-                            <th width="30%">درس</th>
-                            <th width="15%">ظرفیت</th>
-                            <th width="30%">زمان‌بندی</th>
-                            <th width="15%">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="courses-table-body">
-                        <tr>
-                            <td colspan="5" class="text-center py-4">
-                                در حال بارگذاری...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+  <!-- ===== Table ===== -->
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0 text-center align-middle">
+        <thead class="table-light">
+          <tr>
+            <th width="5%">شماره</th>
+            <th width="25%">درس</th>
+            <th width="10%">گروه</th>
+            <th width="15%">ظرفیت</th>
+            <th width="30%">زمان‌بندی</th>
+            <th width="15%">عملیات</th>
+          </tr>
+        </thead>
+        <tbody id="courses-table-body">
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">
+              لطفاً یک نیمسال انتخاب کنید
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
 
-    <div data-include="../partials/footer.html"></div>
+<div data-include="../partials/footer.html"></div>
 
-    <script src="../js/layout.js"></script>
-    <script src="../js/instructor-courses.js"></script>
+<script src="../js/layout.js"></script>
+<script src="../js/instructor-courses.js"></script>
 </body>
 </html>
