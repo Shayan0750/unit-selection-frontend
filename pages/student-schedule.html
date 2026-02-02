@@ -6,6 +6,107 @@
     <title>برنامه هفتگی دانشجو</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/student.css">
+    <style>
+        /* --- استایل‌های اختصاصی برنامه هفتگی --- */
+        .schedule-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            border: 1px solid #dee2e6;
+            text-align: center;
+            padding: 10px;
+            vertical-align: middle;
+        }
+
+        /* هدر ساعت‌ها (بالا) */
+        .schedule-table thead th {
+            background-color: #343a40;
+            color: white;
+            font-weight: bold;
+            padding: 15px;
+            width: 18%;
+            /* تقسیم مساوی بین 5 بازه زمانی */
+        }
+
+        .schedule-table thead th:first-child {
+            width: 10%;
+            /* عرض ستون روزها */
+            background-color: #212529;
+        }
+
+        /* ستون روزها (سمت راست) */
+        .day-col {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+            width: 100px;
+        }
+
+        /* سلول‌های خالی تقویم */
+        .schedule-cell {
+            height: 100px;
+            /* ارتفاع ثابت برای زیبایی */
+            vertical-align: top !important;
+            background-color: #fff;
+            transition: background-color 0.2s;
+        }
+
+        .schedule-cell:hover {
+            background-color: #fafafa;
+        }
+
+        /* --- استایل کارت درس --- */
+        .class-card {
+            background-color: #e3f2fd;
+            border-right: 4px solid #2196f3;
+            /* نوار رنگی سمت راست */
+            color: #0d47a1;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            text-align: right;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: default;
+            transition: transform 0.2s;
+        }
+
+        .class-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .class-title {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding-bottom: 2px;
+        }
+
+        .class-info {
+            display: block;
+            font-size: 0.8em;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 
 <body>
@@ -30,66 +131,70 @@
             <table class="schedule-table">
                 <thead>
                     <tr>
-                        <th style="width: 80px;">ساعت</th>
-                        <th>شنبه</th>
-                        <th>یکشنبه</th>
-                        <th>دوشنبه</th>
-                        <th>سه‌شنبه</th>
-                        <th>چهارشنبه</th>
-                        <th>پنج‌شنبه</th>
-                        <th>جمعه</th>
+                        <th>روز / ساعت</th>
+                        <th>۰۸:۰۰ - ۱۰:۰۰</th>
+                        <th>۱۰:۰۰ - ۱۲:۰۰</th>
+                        <th>۱۲:۰۰ - ۱۴:۰۰</th>
+                        <th>۱۴:۰۰ - ۱۶:۰۰</th>
+                        <th>۱۶:۰۰ - ۱۸:۰۰</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="time-col">۰۸:۰۰ - ۱۰:۰۰</td>
-                        <td id="SA-8-10"></td>
-                        <td id="SU-8-10"></td>
-                        <td id="MO-8-10"></td>
-                        <td id="TU-8-10"></td>
-                        <td id="WE-8-10"></td>
-                        <td id="TH-8-10"></td>
-                        <td id="FR-8-10"></td>
+                        <td class="day-col">شنبه</td>
+                        <td class="schedule-cell" id="SA-8-10"></td>
+                        <td class="schedule-cell" id="SA-10-12"></td>
+                        <td class="schedule-cell" id="SA-12-14"></td>
+                        <td class="schedule-cell" id="SA-14-16"></td>
+                        <td class="schedule-cell" id="SA-16-18"></td>
                     </tr>
                     <tr>
-                        <td class="time-col">۱۰:۰۰ - ۱۲:۰۰</td>
-                        <td id="SA-10-12"></td>
-                        <td id="SU-10-12"></td>
-                        <td id="MO-10-12"></td>
-                        <td id="TU-10-12"></td>
-                        <td id="WE-10-12"></td>
-                        <td id="TH-10-12"></td>
-                        <td id="FR-10-12"></td>
+                        <td class="day-col">یکشنبه</td>
+                        <td class="schedule-cell" id="SU-8-10"></td>
+                        <td class="schedule-cell" id="SU-10-12"></td>
+                        <td class="schedule-cell" id="SU-12-14"></td>
+                        <td class="schedule-cell" id="SU-14-16"></td>
+                        <td class="schedule-cell" id="SU-16-18"></td>
                     </tr>
                     <tr>
-                        <td class="time-col">۱۲:۰۰ - ۱۴:۰۰</td>
-                        <td id="SA-12-14"></td>
-                        <td id="SU-12-14"></td>
-                        <td id="MO-12-14"></td>
-                        <td id="TU-12-14"></td>
-                        <td id="WE-12-14"></td>
-                        <td id="TH-12-14"></td>
-                        <td id="FR-12-14"></td>
+                        <td class="day-col">دوشنبه</td>
+                        <td class="schedule-cell" id="MO-8-10"></td>
+                        <td class="schedule-cell" id="MO-10-12"></td>
+                        <td class="schedule-cell" id="MO-12-14"></td>
+                        <td class="schedule-cell" id="MO-14-16"></td>
+                        <td class="schedule-cell" id="MO-16-18"></td>
                     </tr>
                     <tr>
-                        <td class="time-col">۱۴:۰۰ - ۱۶:۰۰</td>
-                        <td id="SA-14-16"></td>
-                        <td id="SU-14-16"></td>
-                        <td id="MO-14-16"></td>
-                        <td id="TU-14-16"></td>
-                        <td id="WE-14-16"></td>
-                        <td id="TH-14-16"></td>
-                        <td id="FR-14-16"></td>
+                        <td class="day-col">سه‌شنبه</td>
+                        <td class="schedule-cell" id="TU-8-10"></td>
+                        <td class="schedule-cell" id="TU-10-12"></td>
+                        <td class="schedule-cell" id="TU-12-14"></td>
+                        <td class="schedule-cell" id="TU-14-16"></td>
+                        <td class="schedule-cell" id="TU-16-18"></td>
                     </tr>
                     <tr>
-                        <td class="time-col">۱۶:۰۰ - ۱۸:۰۰</td>
-                        <td id="SA-16-18"></td>
-                        <td id="SU-16-18"></td>
-                        <td id="MO-16-18"></td>
-                        <td id="TU-16-18"></td>
-                        <td id="WE-16-18"></td>
-                        <td id="TH-16-18"></td>
-                        <td id="FR-16-18"></td>
+                        <td class="day-col">چهارشنبه</td>
+                        <td class="schedule-cell" id="WE-8-10"></td>
+                        <td class="schedule-cell" id="WE-10-12"></td>
+                        <td class="schedule-cell" id="WE-12-14"></td>
+                        <td class="schedule-cell" id="WE-14-16"></td>
+                        <td class="schedule-cell" id="WE-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">پنج‌شنبه</td>
+                        <td class="schedule-cell" id="TH-8-10"></td>
+                        <td class="schedule-cell" id="TH-10-12"></td>
+                        <td class="schedule-cell" id="TH-12-14"></td>
+                        <td class="schedule-cell" id="TH-14-16"></td>
+                        <td class="schedule-cell" id="TH-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col" style="color: #dc3545;">جمعه</td>
+                        <td class="schedule-cell" id="FR-8-10"></td>
+                        <td class="schedule-cell" id="FR-10-12"></td>
+                        <td class="schedule-cell" id="FR-12-14"></td>
+                        <td class="schedule-cell" id="FR-14-16"></td>
+                        <td class="schedule-cell" id="FR-16-18"></td>
                     </tr>
                 </tbody>
             </table>
