@@ -12,16 +12,7 @@
 <body>
 
   <div data-include="../partials/header.html"></div>
-  <aside class="sidebar" id="sidebarFragment">
-    <nav>
-      <ul class="nav">
-        <li><a href="admin-dashboard.html" data-link="dashboard">داشبورد</a></li>
-        <li><a href="admin-crud.html" data-link="courses">مدیریت دروس</a></li>
-        <li><a href="section-crud.html" data-link="section">مدیریت سکشن ها</a></li>
-        <li><a href="admin_prerequisites.html" data-link="section">مدیریت پیش‌نیازها</a></li>
-      </ul>
-    </nav>
-  </aside>
+  <div id="sidebar-container" data-include=""></div>
 
   <main class="main">
     <div class="card">
@@ -50,12 +41,12 @@
             </div>
 
             <div class="form-group">
-  <label for="courseGroup">دپارتمان درسی *</label>
-  <select id="courseGroup" class="form-control">
-    <option value="">انتخاب دپارتمان...</option>
-  </select>
-  <div id="errGroup" class="text-danger small"></div>
-</div>
+              <label for="courseGroup">دپارتمان درسی *</label>
+              <select id="courseGroup" class="form-control">
+                <option value="">انتخاب دپارتمان...</option>
+              </select>
+              <div id="errGroup" class="text-danger small"></div>
+            </div>
 
 
             <div class="form-group">
@@ -92,45 +83,33 @@
     </div>
 
     <!-- کارت محدودیت واحد -->
-<div class="card unit-limits-card">
+    <div class="card unit-limits-card">
 
-  <h2 class="card-title">مدیریت محدودیت اخذ واحد</h2>
+      <h2 class="card-title">مدیریت محدودیت اخذ واحد</h2>
 
-  <form id="unitLimitsForm" class="unit-limits-form" autocomplete="off" novalidate>
+      <form id="unitLimitsForm" class="unit-limits-form" autocomplete="off" novalidate>
 
-    <div class="form-group">
-      <label for="minUnits">حداقل تعداد واحد قابل اخذ</label>
-      <input
-        id="minUnits"
-        type="number"
-        min="0"
-        class="form-control"
-        placeholder="مثلاً 14"
-      />
-      <div id="errMinUnits" class="field-error"></div>
+        <div class="form-group">
+          <label for="minUnits">حداقل تعداد واحد قابل اخذ</label>
+          <input id="minUnits" type="number" min="0" class="form-control" placeholder="مثلاً 14" />
+          <div id="errMinUnits" class="field-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="maxUnits">حداکثر تعداد واحد قابل اخذ</label>
+          <input id="maxUnits" type="number" min="0" class="form-control" placeholder="مثلاً 26" />
+          <div id="errMaxUnits" class="field-error"></div>
+        </div>
+
+        <div class="form-actions">
+          <button type="reset" class="btn btn-outline">پاک کردن</button>
+          <button type="submit" class="btn btn-primary">ثبت</button>
+        </div>
+
+        <div id="unitLimitsMsg" class="form-message"></div>
+
+      </form>
     </div>
-
-    <div class="form-group">
-      <label for="maxUnits">حداکثر تعداد واحد قابل اخذ</label>
-      <input
-        id="maxUnits"
-        type="number"
-        min="0"
-        class="form-control"
-        placeholder="مثلاً 26"
-      />
-      <div id="errMaxUnits" class="field-error"></div>
-    </div>
-
-    <div class="form-actions">
-      <button type="reset" class="btn btn-outline">پاک کردن</button>
-      <button type="submit" class="btn btn-primary">ثبت</button>
-    </div>
-
-    <div id="unitLimitsMsg" class="form-message"></div>
-
-  </form>
-</div>
 
   </main>
 
