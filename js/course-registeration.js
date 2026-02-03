@@ -1,225 +1,228 @@
 (() => {
     const API_BASE = "http://127.0.0.1:8000/api/";
+
+    // --- تنظیمات API ---
     const CURRENT_TERM = 1;
 
+    // 1. لیست تمام دروس ارائه شده در ترم (برای انتخاب)
     const SECTIONS_API = API_BASE + `student-sections/?term=${CURRENT_TERM}`;
-    const COURSES_API = API_BASE + "courses/";
-    const INSTRUCTORS_API = API_BASE + "instructors/";
-    const PREREQ_API = API_BASE + "prerequisites/";
-    const ENROLL_API = API_BASE + "enroll/";
-    const REFRESH_API = API_BASE + "token/refresh/";
+
+    // 2. لیست دروس اخذ شده توسط این دانشجو (GET برای مشاهده، POST برای اخذ، DELETE برای حذف)
+    const ENROLL_URL = API_BASE + "enroll/";
+
+    // 3. دیتای کمکی برای نام دروس و اساتید در جدول بالا
+    const COURSES_LIST_API = API_BASE + "courses/list/";
+    const INSTRUCTORS_LIST_API = API_BASE + "instructors/";
+
+    const REFRESH_URL = API_BASE + "token/refresh/";
 
     const DayMap = {
         SA: "شنبه", SU: "یکشنبه", MO: "دوشنبه",
-        TU: "سه‌شنبه", WE: "چهارشنبه", TH: "پنجشنبه", FR: "جمعه"
+        TU: "سه‌شنبه", WE: "چهارشنبه", TH: "پنج‌شنبه", FR: "جمعه"
     };
 
-    const TimeMap = {
-        "8-10": "۰۸:۰۰ - ۱۰:۰۰",
-        "10-12": "۱۰:۰۰ - ۱۲:۰۰",
-        "12-14": "۱۲:۰۰ - ۱۴:۰۰",
-        "14-16": "۱۴:۰۰ - ۱۶:۰۰",
-        "16-18": "۱۶:۰۰ - ۱۸:۰۰"
-    };
-
-    function tokens() {
-        return {
-            access: localStorage.getItem("access"),
-            refresh: localStorage.getItem("refresh")
-        };
-    }
-
-    async function refreshAccess() {
-        const t = tokens();
-        if (!t.refresh) return null;
-
-        const r = await fetch(REFRESH_API, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refresh: t.refresh })
-        });
-        if (!r.ok) return null;
-        const j = await r.json();
-        if (j.access) {
-            localStorage.setItem("access", j.access);
-            if (j.refresh) localStorage.setItem("refresh", j.refresh);
-            return j.access;
-        }
-        return null;
-    }
+    // --- Authentication Helpers ---
+    function tokens() { return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') }; }
 
     async function fetchWithAuth(url, opts = {}, retry = true) {
         opts.headers = opts.headers || {};
+        opts.headers['Content-Type'] = 'application/json';
         const t = tokens();
-        if (t.access) opts.headers.Authorization = `Bearer ${t.access}`;
+        if (t.access) opts.headers['Authorization'] = `Bearer ${t.access}`;
+
         let res = await fetch(url, opts);
-        if (res.status !== 401 || !retry) return res;
-        const newAccess = await refreshAccess();
-        if (!newAccess) {
-            window.location.href = "login.html";
-            return null;
+        if (res.status === 401 && retry) {
+            const refreshRes = await fetch(REFRESH_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh: t.refresh })
+            });
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                localStorage.setItem('access', data.access);
+                return fetchWithAuth(url, opts, false);
+            }
         }
-        opts.headers.Authorization = `Bearer ${newAccess}`;
-        return fetch(url, opts);
+        return res;
     }
 
-    let allSections = [];
-    let enrolledSections = [];
+    // --- State & Maps ---
+    let offeredSections = [];
+    let enrolledProgram = [];
     const courseMap = {};
     const instructorMap = {};
-    const prereqMap = {}; // course -> [prereq1, prereq2...]
 
-    async function loadCourses() {
-        const res = await fetchWithAuth(COURSES_API);
-        if (!res.ok) throw new Error("courses failed");
-        const data = await res.json();
-        data.forEach(c => courseMap[c.code] = c.title);
+    async function init() {
+        await Promise.all([loadCoursesMeta(), loadInstructorsMeta()]);
+        await Promise.all([loadOfferedSections(), loadEnrolledProgram()]);
     }
 
-    async function loadInstructors() {
-        const res = await fetchWithAuth(INSTRUCTORS_API);
-        if (!res.ok) throw new Error("instructors failed");
-        const data = await res.json();
-        data.forEach(i => instructorMap[i.id] = `${i.f_name} ${i.l_name}`.trim());
+    async function loadCoursesMeta() {
+        try {
+            const res = await fetchWithAuth(COURSES_LIST_API);
+            if (res.ok) {
+                const data = await res.json();
+                data.forEach(c => courseMap[c.code] = c.title);
+            }
+        } catch (e) { console.warn("Metadata error", e); }
     }
 
-    async function loadPrerequisites() {
-        const res = await fetchWithAuth(PREREQ_API);
-        if (!res.ok) throw new Error("prerequisites failed");
-        const data = await res.json();
-        data.forEach(p => {
-            if (!prereqMap[p.course]) prereqMap[p.course] = [];
-            prereqMap[p.course].push(p.prereq_course);
-        });
+    async function loadInstructorsMeta() {
+        try {
+            const res = await fetchWithAuth(INSTRUCTORS_LIST_API);
+            if (res.ok) {
+                const data = await res.json();
+                data.forEach(i => instructorMap[i.id] = `${i.f_name} ${i.l_name}`);
+            }
+        } catch (e) { console.warn("Metadata error", e); }
     }
 
-    function renderSections() {
+    async function loadOfferedSections() {
+        try {
+            const res = await fetchWithAuth(SECTIONS_API);
+            if (res.ok) {
+                offeredSections = await res.json();
+                renderOfferedTable();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function loadEnrolledProgram() {
+        try {
+            // دریافت لیست دروس اخذ شده از /api/enroll/
+            const res = await fetchWithAuth(ENROLL_URL);
+            if (res.ok) {
+                enrolledProgram = await res.json();
+                renderEnrolledTable();
+                renderOfferedTable(); // بروزرسانی دکمه‌های جدول انتخاب واحد
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // --- Rendering ---
+    function formatMeetings(meetings) {
+        if (!meetings || !meetings.length) return "تعیین نشده";
+        return meetings.map(m => {
+            const day = DayMap[m.day] || m.day;
+            return `<span class="badge-time">${day} ${m.time_slot}</span>`;
+        }).join(' ');
+    }
+
+    function renderOfferedTable(filterList = null) {
+        const list = filterList || offeredSections;
         const tbody = document.getElementById("sections-table-body");
         tbody.innerHTML = "";
-        if (!allSections.length) {
+
+        if (!list.length) {
             document.getElementById("no-results").style.display = "block";
             return;
         }
         document.getElementById("no-results").style.display = "none";
 
-        allSections.forEach(sec => {
+        // پیدا کردن کدهای دروسی که قبلاً اخذ شده‌اند (برای غیرفعال کردن دکمه)
+        const enrolledCodes = new Set(enrolledProgram.map(item => item.section.course.code));
+
+        list.forEach(sec => {
+            const isTaken = enrolledCodes.has(sec.course);
             const tr = document.createElement("tr");
-
-            const courseTitle = courseMap[sec.course] || sec.course;
-            const instructorName = instructorMap[sec.instructor] || "-";
-            const group = sec.group_number || "-";
-            const meetings = sec.meetings?.map(m => {
-                const day = DayMap[m.day] || m.day;
-                const time = TimeMap[m.time_slot] || m.time_slot;
-                return `${day} ${time} (کلاس ${m.room_id})`;
-            }).join("<br>") || "---";
-
-            const canEnroll = checkPrerequisites(sec.course);
-
             tr.innerHTML = `
-                <td><strong>${courseTitle}</strong><br><small style="color:#777">(${sec.course})</small></td>
-                <td>${instructorName}</td>
-                <td>${group}</td>
-                <td>${sec.capacity}</td>
-                <td>${meetings}</td>
                 <td>
-                    <button ${!canEnroll ? "disabled" : ""} onclick="enrollCourse(${sec.id})">اخذ</button>
+                    <strong>${courseMap[sec.course] || "در حال بارگذاری..."}</strong>
+                    <br><small class="text-muted">کد: ${sec.course}</small>
+                </td>
+                <td>${instructorMap[sec.instructor] || "نامشخص"}</td>
+                <td>گروه ${sec.group_number} <br> <small>ظرفیت: ${sec.capacity}</small></td>
+                <td>${formatMeetings(sec.meetings)}</td>
+                <td>
+                    ${isTaken
+                    ? '<button class="btn btn-secondary btn-sm" disabled>اخذ شده</button>'
+                    : `<button class="btn btn-primary btn-sm" onclick="handleEnroll(${sec.id})">اخذ درس</button>`
+                }
                 </td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    function renderEnrolled() {
+    function renderEnrolledTable() {
         const tbody = document.getElementById("enrolled-table-body");
         tbody.innerHTML = "";
-        if (!enrolledSections.length) {
+
+        if (!enrolledProgram.length) {
             document.getElementById("no-enrolled").style.display = "block";
             return;
         }
         document.getElementById("no-enrolled").style.display = "none";
 
-        enrolledSections.forEach(sec => {
+        enrolledProgram.forEach(item => {
+            // طبق ساختار جدید: اطلاعات اصلی داخل item.section است
+            const sec = item.section;
             const tr = document.createElement("tr");
-            const courseTitle = courseMap[sec.course] || sec.course;
-            const instructorName = instructorMap[sec.instructor] || "-";
-            const group = sec.group_number || "-";
-            const meetings = sec.meetings?.map(m => {
-                const day = DayMap[m.day] || m.day;
-                const time = TimeMap[m.time_slot] || m.time_slot;
-                return `${day} ${time} (کلاس ${m.room_id})`;
-            }).join("<br>") || "---";
 
             tr.innerHTML = `
-                <td><strong>${courseTitle}</strong><br><small style="color:#777">(${sec.course})</small></td>
-                <td>${instructorName}</td>
-                <td>${group}</td>
-                <td>${sec.term}</td>
-                <td>${meetings}</td>
-                <td><button onclick="dropCourse(${sec.id})">حذف</button></td>
+                <td>
+                    <strong>${sec.course.title}</strong>
+                    <br><small class="text-muted">کد: ${sec.course.code}</small>
+                </td>
+                <td>${sec.instructor.f_name} ${sec.instructor.l_name}</td>
+                <td>${sec.course.units}</td>
+                <td>${sec.group_number}</td>
+                <td>${formatMeetings(sec.meetings)}</td>
+                <td>
+                    <button class="btn btn-outline-danger btn-sm" onclick="handleDrop(${item.id})">حذف</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    function checkPrerequisites(courseCode) {
-        const prereqs = prereqMap[courseCode] || [];
-        return prereqs.every(pr => enrolledSections.some(s => s.course === pr));
-    }
+    // --- Actions ---
 
-    async function loadSections() {
-        await Promise.all([loadCourses(), loadInstructors(), loadPrerequisites()]);
-        const res = await fetchWithAuth(SECTIONS_API);
-        const data = await res.json();
-        allSections = Array.isArray(data) ? data : (data.results || []);
-
-        // load enrolled sections separately
-        enrolledSections = allSections.filter(s => s.enrolled); // فرض می‌کنیم API این فیلد را می‌دهد
-        renderSections();
-        renderEnrolled();
-    }
-
-    window.enrollCourse = async (sectionId) => {
+    // ۱. اخذ درس (POST)
+    window.handleEnroll = async (sectionId) => {
         try {
-            const res = await fetchWithAuth(ENROLL_API, {
+            const res = await fetchWithAuth(ENROLL_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ section: sectionId })
             });
-            if (!res.ok) throw new Error("Enroll failed");
-            // اضافه کردن به لیست اخذ شده
-            const enrolled = allSections.find(s => s.id === sectionId);
-            if (enrolled) enrolledSections.push(enrolled);
-            renderSections();
-            renderEnrolled();
-        } catch (e) {
-            alert("اخذ درس موفقیت‌آمیز نبود!");
-        }
+
+            if (res.ok) {
+                alert("درس با موفقیت به لیست شما اضافه شد.");
+                loadEnrolledProgram();
+            } else {
+                const err = await res.json();
+                alert(err.detail || "خطا در اخذ درس (احتمال تداخل زمانی یا پیش‌نیاز)");
+            }
+        } catch (e) { alert("خطا در ارتباط با سرور"); }
     };
 
-    window.dropCourse = async (enrolledId) => {
+    // ۲. حذف درس (DELETE) - اصلاح شده
+    window.handleDrop = async (enrollmentId) => {
+        if (!confirm("آیا از حذف این درس از برنامه خود مطمئن هستید؟")) return;
+
         try {
-            const res = await fetchWithAuth(`${SECTIONS_API}${enrolledId}/`, { method: "DELETE" });
-            if (!res.ok) throw new Error("Drop failed");
-            enrolledSections = enrolledSections.filter(s => s.id !== enrolledId);
-            renderSections();
-            renderEnrolled();
-        } catch (e) {
-            alert("حذف درس موفقیت‌آمیز نبود!");
-        }
+            // آدرس نهایی: /api/enroll/{id}/
+            const url = `${ENROLL_URL}${enrollmentId}/`;
+            const res = await fetchWithAuth(url, { method: "DELETE" });
+
+            if (res.ok) {
+                loadEnrolledProgram(); // لیست را مجدداً بارگذاری کن
+            } else {
+                alert("حذف درس با خطا مواجه شد.");
+            }
+        } catch (e) { alert("خطا در ارتباط با سرور"); }
     };
 
-    document.addEventListener("DOMContentLoaded", () => {
-        loadSections();
-        document.getElementById("course-search")?.addEventListener("input", (e) => {
-            const q = e.target.value.toLowerCase().trim();
-            const filtered = allSections.filter(sec => {
-                const courseCode = sec.course?.toLowerCase() || "";
-                const instructorName = instructorMap[sec.instructor]?.toLowerCase() || "";
-                return courseCode.includes(q) || instructorName.includes(q);
-            });
-            renderSections(filtered);
+    // فیلتر جستجو
+    document.getElementById("course-search").addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        const filtered = offeredSections.filter(sec => {
+            const title = (courseMap[sec.course] || "").toLowerCase();
+            const prof = (instructorMap[sec.instructor] || "").toLowerCase();
+            return title.includes(q) || sec.course.includes(q) || prof.includes(q);
         });
+        renderOfferedTable(filtered);
     });
 
+    document.addEventListener("DOMContentLoaded", init);
 })();

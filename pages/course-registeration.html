@@ -14,37 +14,43 @@
     <div id="sidebar-container" data-include=""></div>
 
     <main class="main">
-        <h2>انتخاب واحد</h2>
+        <h2>دروس ارائه شده (ترم جاری)</h2>
 
-        <div id="course-list-container" class="card">
+        <div class="search-box-container" style="margin-bottom: 15px;">
+            <input type="text" id="course-search" class="form-control"
+                placeholder="جستجو (نام درس، کد یا نام استاد)...">
+        </div>
+
+        <div class="card">
             <table class="course-table">
                 <thead>
                     <tr>
-                        <th>درس</th>
+                        <th>مشخصات درس</th>
                         <th>استاد</th>
-                        <th>شماره گروه</th>
                         <th>ظرفیت</th>
-                        <th>زمان‌بندی</th>
+                        <th>زمان‌بندی کلاس</th>
                         <th>عملیات</th>
                     </tr>
                 </thead>
                 <tbody id="sections-table-body">
                 </tbody>
             </table>
-            <p id="no-results" style="display: none; text-align: center; color: gray; margin-top: 15px;">
-                موردی یافت نشد.
+            <p id="no-results" class="text-center text-muted" style="display: none; padding: 20px;">
+                موردی یافت نشد یا لیست بارگذاری نشده است.
             </p>
         </div>
 
-        <h2 style="margin-top: 30px;">دروس اخذ شده</h2>
-        <div id="enrolled-list-container" class="card">
+        <h2 style="margin-top: 40px; border-top: 2px dashed #eee; padding-top: 20px;">
+            برنامه هفتگی شما (دروس اخذ شده)
+        </h2>
+        <div class="card" style="border-right: 4px solid #4caf50;">
             <table class="course-table">
                 <thead>
                     <tr>
-                        <th>درس</th>
+                        <th>مشخصات درس</th>
                         <th>استاد</th>
-                        <th>شماره گروه</th>
-                        <th>نیمسال</th>
+                        <th>واحد</th>
+                        <th>گروه</th>
                         <th>زمان‌بندی</th>
                         <th>عملیات</th>
                     </tr>
@@ -52,7 +58,7 @@
                 <tbody id="enrolled-table-body">
                 </tbody>
             </table>
-            <p id="no-enrolled" style="display: none; text-align: center; color: gray; margin-top: 15px;">
+            <p id="no-enrolled" class="text-center text-muted" style="display: none; padding: 20px;">
                 هنوز درسی اخذ نکرده‌اید.
             </p>
         </div>
