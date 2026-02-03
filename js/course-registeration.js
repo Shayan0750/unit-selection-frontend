@@ -4,15 +4,17 @@
     // --- تنظیمات API ---
     const CURRENT_TERM = 1;
 
-    // 1. لیست تمام دروس ارائه شده در ترم (برای انتخاب)
+    // 1. لیست تمام دروس ارائه شده در ترم (حاوی کد درس و اطلاعات اولیه)
     const SECTIONS_API = API_BASE + `student-sections/?term=${CURRENT_TERM}`;
 
-    // 2. لیست دروس اخذ شده توسط این دانشجو (GET برای مشاهده، POST برای اخذ، DELETE برای حذف)
+    // 2. لیست دروس اخذ شده (حاوی اطلاعات کامل درس مثل Title)
     const ENROLL_URL = API_BASE + "enroll/";
 
-    // 3. دیتای کمکی برای نام دروس و اساتید در جدول بالا
-    const COURSES_LIST_API = API_BASE + "courses/list/";
+    // 3. لیست اساتید
     const INSTRUCTORS_LIST_API = API_BASE + "instructors/";
+
+    // 4. لیست کامل دروس (برای استخراج نام درس در جدول انتخاب واحد)
+    const COURSES_LIST_API = API_BASE + "courses/";
 
     const REFRESH_URL = API_BASE + "token/refresh/";
 
@@ -53,18 +55,23 @@
     const instructorMap = {};
 
     async function init() {
+        // ابتدا متادیتاها را لود می‌کنیم تا نام‌ها آماده باشند
         await Promise.all([loadCoursesMeta(), loadInstructorsMeta()]);
+        // سپس لیست‌ها را لود می‌کنیم
         await Promise.all([loadOfferedSections(), loadEnrolledProgram()]);
     }
 
     async function loadCoursesMeta() {
         try {
+            // فراخوانی لیست اصلی دروس برای داشتن تناظر کد به نام
             const res = await fetchWithAuth(COURSES_LIST_API);
             if (res.ok) {
                 const data = await res.json();
-                data.forEach(c => courseMap[c.code] = c.title);
+                data.forEach(c => {
+                    courseMap[c.code] = c.title;
+                });
             }
-        } catch (e) { console.warn("Metadata error", e); }
+        } catch (e) { console.warn("Metadata error (Courses)", e); }
     }
 
     async function loadInstructorsMeta() {
@@ -74,7 +81,7 @@
                 const data = await res.json();
                 data.forEach(i => instructorMap[i.id] = `${i.f_name} ${i.l_name}`);
             }
-        } catch (e) { console.warn("Metadata error", e); }
+        } catch (e) { console.warn("Metadata error (Instructors)", e); }
     }
 
     async function loadOfferedSections() {
@@ -89,12 +96,11 @@
 
     async function loadEnrolledProgram() {
         try {
-            // دریافت لیست دروس اخذ شده از /api/enroll/
             const res = await fetchWithAuth(ENROLL_URL);
             if (res.ok) {
                 enrolledProgram = await res.json();
                 renderEnrolledTable();
-                renderOfferedTable(); // بروزرسانی دکمه‌های جدول انتخاب واحد
+                renderOfferedTable(); // بروزرسانی دکمه‌ها (اخذ شده/نشده)
             }
         } catch (e) { console.error(e); }
     }
@@ -119,15 +125,18 @@
         }
         document.getElementById("no-results").style.display = "none";
 
-        // پیدا کردن کدهای دروسی که قبلاً اخذ شده‌اند (برای غیرفعال کردن دکمه)
+        // استخراج کدهای اخذ شده برای چک کردن وضعیت دکمه‌ها
         const enrolledCodes = new Set(enrolledProgram.map(item => item.section.course.code));
 
         list.forEach(sec => {
             const isTaken = enrolledCodes.has(sec.course);
+            // پیدا کردن نام درس از مپ (اگر پیدا نشد خود کد را نشان بده)
+            const courseTitle = courseMap[sec.course] || `درس ${sec.course}`;
+
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>
-                    <strong>${courseMap[sec.course] || "در حال بارگذاری..."}</strong>
+                    <strong>${courseTitle}</strong>
                     <br><small class="text-muted">کد: ${sec.course}</small>
                 </td>
                 <td>${instructorMap[sec.instructor] || "نامشخص"}</td>
@@ -155,7 +164,6 @@
         document.getElementById("no-enrolled").style.display = "none";
 
         enrolledProgram.forEach(item => {
-            // طبق ساختار جدید: اطلاعات اصلی داخل item.section است
             const sec = item.section;
             const tr = document.createElement("tr");
 
@@ -178,7 +186,6 @@
 
     // --- Actions ---
 
-    // ۱. اخذ درس (POST)
     window.handleEnroll = async (sectionId) => {
         try {
             const res = await fetchWithAuth(ENROLL_URL, {
@@ -196,24 +203,21 @@
         } catch (e) { alert("خطا در ارتباط با سرور"); }
     };
 
-    // ۲. حذف درس (DELETE) - اصلاح شده
     window.handleDrop = async (enrollmentId) => {
         if (!confirm("آیا از حذف این درس از برنامه خود مطمئن هستید؟")) return;
 
         try {
-            // آدرس نهایی: /api/enroll/{id}/
             const url = `${ENROLL_URL}${enrollmentId}/`;
             const res = await fetchWithAuth(url, { method: "DELETE" });
 
             if (res.ok) {
-                loadEnrolledProgram(); // لیست را مجدداً بارگذاری کن
+                loadEnrolledProgram();
             } else {
                 alert("حذف درس با خطا مواجه شد.");
             }
         } catch (e) { alert("خطا در ارتباط با سرور"); }
     };
 
-    // فیلتر جستجو
     document.getElementById("course-search").addEventListener("input", (e) => {
         const q = e.target.value.toLowerCase().trim();
         const filtered = offeredSections.filter(sec => {
