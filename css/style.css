@@ -8973,3 +8973,69 @@ padding: 20px;
   margin-top: 2px;
   opacity: 0.9;
 }
+
+
+/* استایل اختصاصی برای کارت‌های درس */
+.course-card {
+background: white;
+border-radius: 8px;
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+margin-bottom: 25px;
+overflow: hidden;
+border: 1px solid #e0e0e0;
+}
+
+.course-header {
+  background-color: #f8f9fa;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.student-count {
+  background: #e9ecef;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.table-responsive {
+  padding: 0;
+}
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.students-table th,
+.students-table td {
+  padding: 12px 20px;
+  text-align: right;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.students-table th {
+  background-color: #fff;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.students-table tr:last-child td {
+  border-bottom: none;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}

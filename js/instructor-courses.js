@@ -1,156 +1,167 @@
-// ../js/instructor-courses.js
-document.addEventListener('DOMContentLoaded', async function () {
-  const API_BASE = 'http://127.0.0.1:8000/api/';
-  const URLS = {
-    INSTRUCTORS: API_BASE + 'instructors/',
-    SECTIONS: API_BASE + 'student-sections/',
-    COURSES: API_BASE + 'courses/',
-    TERMS: API_BASE + 'terms/'
-  };
+(() => {
+  const API_BASE = "http://127.0.0.1:8000/api/";
+  const ENROLLMENTS_API = API_BASE + "instructor/enrollments/";
+  const REFRESH_URL = API_BASE + "token/refresh/";
 
-  const tbody = document.getElementById('courses-table-body');
-  const pageTitle = document.getElementById('page-title');
-  const sectionCount = document.getElementById('section-count');
-  const termSelect = document.getElementById('term-select');
+  // --- توابع Auth (مشابه قبل) ---
+  function tokens() { return { access: localStorage.getItem('access'), refresh: localStorage.getItem('refresh') }; }
 
-  const token = localStorage.getItem('access');
-  const userId = localStorage.getItem('user_id');
-  if (!token || !userId) { window.location.href = '../login.html'; return; }
+  async function fetchWithAuth(url, opts = {}, retry = true) {
+    opts.headers = opts.headers || {};
+    opts.headers['Content-Type'] = 'application/json';
+    const t = tokens();
+    if (t.access) opts.headers['Authorization'] = `Bearer ${t.access}`;
 
-  let state = { instructor: null, courses: [], terms: [] };
-
-  // =========================
-  // UI Helpers
-  // =========================
-  function showLoading(msg = 'در حال بارگذاری...') {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">${msg}</td></tr>`;
+    let res = await fetch(url, opts);
+    if (res.status === 401 && retry) {
+      const refreshRes = await fetch(REFRESH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: t.refresh })
+      });
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        localStorage.setItem('access', data.access);
+        return fetchWithAuth(url, opts, false);
+      }
+    }
+    return res;
   }
 
-  function showMessage(msg, type = 'info') {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">
-      <div class="alert alert-${type}">${msg}</div>
-    </td></tr>`;
-  }
+  // --- منطق اصلی ---
 
-  // =========================
-  // Load Initial Data
-  // =========================
   async function init() {
-    await loadInstructor();
-    await loadCourses();
-    await loadTerms();
+    await loadEnrollments();
   }
 
-  async function loadInstructor() {
-    const res = await fetch(URLS.INSTRUCTORS, { headers: { Authorization: 'Bearer ' + token } });
-    if (!res.ok) { showMessage('خطا در دریافت اطلاعات استاد', 'danger'); return; }
-    const instructors = await res.json();
-    state.instructor = instructors.find(i => i.user == userId);
-    if (!state.instructor) { showMessage('استاد مربوطه یافت نشد', 'warning'); return; }
-    pageTitle.textContent = `دروس استاد ${state.instructor.f_name} ${state.instructor.l_name}`;
-  }
+  async function loadEnrollments() {
+    const container = document.querySelector('#courses-container');
+    try {
+      const res = await fetchWithAuth(ENROLLMENTS_API);
+      if (!res.ok) throw new Error("خطا در دریافت اطلاعات");
 
-  async function loadCourses() {
-    const res = await fetch(URLS.COURSES, { headers: { Authorization: 'Bearer ' + token } });
-    if (res.ok) state.courses = await res.json();
-  }
-
-  async function loadTerms() {
-    const res = await fetch(URLS.TERMS, { headers: { Authorization: 'Bearer ' + token } });
-    if (!res.ok) {
-      termSelect.innerHTML = '<option value="">خطا در دریافت نیمسال</option>';
-      return;
+      const enrollments = await res.json();
+      renderCourses(enrollments, container);
+    } catch (e) {
+      console.error(e);
+      container.innerHTML = `<div class="empty-state" style="color:red">خطا در برقراری ارتباط با سرور.</div>`;
     }
-    state.terms = await res.json();
-    termSelect.innerHTML = '<option value="">انتخاب نیمسال...</option>';
-    state.terms.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t.id;
-      opt.textContent = `${t.year} - ${t.semester === 'F' ? 'نیمسال اول' : 'نیمسال دوم'}`;
-      termSelect.appendChild(opt);
-    });
   }
 
-  // =========================
-  // Load Sections by Term
-  // =========================
-  async function loadSectionsByTerm(termId) {
-    showLoading();
-    const res = await fetch(`${URLS.SECTIONS}?term=${termId}`, {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    if (!res.ok) { showMessage('خطا در دریافت سکشن‌ها', 'danger'); return; }
-
-    const data = await res.json();
-    const sections = Array.isArray(data) ? data : (data.results || []);
-    const instructorSections = sections.filter(s => s.instructor == state.instructor.id);
-
-    if (instructorSections.length === 0) {
-      showMessage('در این نیمسال سکشنی برای شما ثبت نشده است');
-      sectionCount.textContent = '۰ سکشن';
+  function renderCourses(enrollments, container) {
+    if (!enrollments || enrollments.length === 0) {
+      container.innerHTML = '<div class="empty-state">هیچ دانشجویی در دروس شما ثبت‌نام نکرده است.</div>';
       return;
     }
 
-    displaySections(instructorSections);
-    sectionCount.textContent = `${instructorSections.length} سکشن`;
-  }
+    // 1. گروه‌بندی رکوردها بر اساس کد درس (و شماره گروه)
+    // ساختار خروجی: { "111-1": [record1, record2], "7777-1": [record3] }
+    const grouped = {};
+    enrollments.forEach(item => {
+      // کلید منحصر به فرد برای گروه‌بندی: کد درس + شماره گروه
+      const key = `${item.course_code}_${item.group_number}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          code: item.course_code,
+          group: item.group_number,
+          term: item.term,
+          students: []
+        };
+      }
+      grouped[key].students.push(item);
+    });
 
-  // =========================
-  // Render Table
-  // =========================
-  function displaySections(sections) {
-    tbody.innerHTML = ''; // پاک کردن محتوای قبلی
-    sections.forEach(section => {
-      const course = state.courses.find(c => c.code === section.course);
-      const courseName = course ? course.title : section.course;
+    // 2. ساخت HTML برای هر گروه
+    container.innerHTML = '';
 
-      const schedule = section.meetings?.length
-        ? section.meetings.map(m => `${dayName(m.day)} ${timeName(m.time_slot)} (${m.room_id})`).join('<br>')
-        : '—';
+    Object.values(grouped).forEach(courseData => {
+      const section = document.createElement('div');
+      section.className = 'course-card';
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${section.id}</td>
-        <td>
-          <strong>${courseName}</strong><br>
-          <small class="text-muted">${section.course}</small>
-        </td>
-        <td>${section.group_number ?? '-'}</td>
-        <td>${section.capacity}</td>
-        <td>${schedule}</td>
-        <td>
-          <button class="btn btn-sm btn-primary" onclick="viewSection(${section.id})">مشاهده</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
+      // مرتب‌سازی دانشجویان بر اساس نام خانوادگی
+      courseData.students.sort((a, b) => a.student.l_name.localeCompare(b.student.l_name, 'fa'));
+
+      let rowsHTML = '';
+      courseData.students.forEach((item, index) => {
+        const st = item.student;
+        // تاریخ ثبت‌نام را فرمت می‌کنیم (اختیاری)
+        const date = new Date(item.created_at).toLocaleDateString('fa-IR');
+
+        rowsHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${st.f_name} ${st.l_name}</td>
+                        <!-- <td>${st.email || '-'}</td> -->
+                        <!-- <td>${st.id}</td> -->
+                        <td>${date}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger btn-remove" 
+                                data-enroll-id="${item.id}"
+                                data-fullname="${st.f_name} ${st.l_name}">
+                                حذف از درس
+                            </button>
+                        </td>
+                    </tr>
+                `;
+      });
+
+      section.innerHTML = `
+                <div class="course-header">
+                    <span class="course-title">
+                        📚 کد درس: ${courseData.code} <small>(گروه ${courseData.group})</small>
+                        <span style="font-size:0.8em; color:#777; margin-right:10px">
+                             ترم: ${courseData.term.semester} ${courseData.term.year}
+                        </span>
+                    </span>
+                    <span class="student-count">${courseData.students.length} دانشجو</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="students-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px">#</th>
+                                <th>نام و نام‌خانوادگی</th>
+                                <!-- <th>ایمیل</th> -->
+                                <!-- <th>شماره دانشجویی</th> -->
+                                <th>تاریخ ثبت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+      container.appendChild(section);
     });
   }
 
-  // =========================
-  // Helpers
-  // =========================
-  function dayName(d) {
-    return { SA: 'شنبه', SU: 'یکشنبه', MO: 'دوشنبه', TU: 'سه‌شنبه', WE: 'چهارشنبه', TH: 'پنجشنبه', FR: 'جمعه' }[d] || d;
-  }
+  // --- مدیریت حذف دانشجو ---
+  // استفاده از Event Delegation برای دکمه‌های حذف
+  document.querySelector('#courses-container').addEventListener('click', async (e) => {
+    if (e.target.classList.contains('btn-remove')) {
+      const enrollId = e.target.dataset.enrollId;
+      const fullname = e.target.dataset.fullname;
 
-  function timeName(t) {
-    return { '8-10': '۸-۱۰', '10-12': '۱۰-۱۲', '12-14': '۱۲-۱۴', '14-16': '۱۴-۱۶', '16-18': '۱۶-۱۸' }[t] || t;
-  }
+      if (confirm(`آیا مطمئن هستید که می‌خواهید "${fullname}" را از این درس حذف کنید؟\nاین عملیات قابل بازگشت نیست.`)) {
+        try {
+          const deleteUrl = `${ENROLLMENTS_API}${enrollId}/`;
+          const res = await fetchWithAuth(deleteUrl, { method: 'DELETE' });
 
-  window.viewSection = id => alert(`سکشن ${id}`);
-
-  // =========================
-  // Events
-  // =========================
-  termSelect.addEventListener('change', e => {
-    const termId = e.target.value;
-    if (termId) loadSectionsByTerm(termId);
-    else {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">لطفاً یک نیمسال انتخاب کنید</td></tr>`;
-      sectionCount.textContent = '۰ سکشن';
+          if (res.ok) {
+            // بارگذاری مجدد لیست پس از حذف موفق
+            loadEnrollments();
+          } else {
+            alert("خطا در حذف دانشجو. ممکن است دسترسی لازم را نداشته باشید.");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("خطا در ارتباط با سرور");
+        }
+      }
     }
   });
 
-  // Start
-  init();
-});
+  document.addEventListener('DOMContentLoaded', init);
+})();
