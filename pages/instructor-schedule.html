@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>برنامه دروس </title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <div data-include="../partials/header.html"></div>
+    <div id="sidebar-container" data-include=""></div>
+
+    <main class="main">
+        <h2>برنامه دروس ترم جاری</h2>
+
+        <div class="schedule-container">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>روز / ساعت</th>
+                        <th>۰۸:۰۰ - ۱۰:۰۰</th>
+                        <th>۱۰:۰۰ - ۱۲:۰۰</th>
+                        <th>۱۲:۰۰ - ۱۴:۰۰</th>
+                        <th>۱۴:۰۰ - ۱۶:۰۰</th>
+                        <th>۱۶:۰۰ - ۱۸:۰۰</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="day-col">شنبه</td>
+                        <td class="schedule-cell" id="SA-8-10"></td>
+                        <td class="schedule-cell" id="SA-10-12"></td>
+                        <td class="schedule-cell" id="SA-12-14"></td>
+                        <td class="schedule-cell" id="SA-14-16"></td>
+                        <td class="schedule-cell" id="SA-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">یکشنبه</td>
+                        <td class="schedule-cell" id="SU-8-10"></td>
+                        <td class="schedule-cell" id="SU-10-12"></td>
+                        <td class="schedule-cell" id="SU-12-14"></td>
+                        <td class="schedule-cell" id="SU-14-16"></td>
+                        <td class="schedule-cell" id="SU-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">دوشنبه</td>
+                        <td class="schedule-cell" id="MO-8-10"></td>
+                        <td class="schedule-cell" id="MO-10-12"></td>
+                        <td class="schedule-cell" id="MO-12-14"></td>
+                        <td class="schedule-cell" id="MO-14-16"></td>
+                        <td class="schedule-cell" id="MO-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">سه‌شنبه</td>
+                        <td class="schedule-cell" id="TU-8-10"></td>
+                        <td class="schedule-cell" id="TU-10-12"></td>
+                        <td class="schedule-cell" id="TU-12-14"></td>
+                        <td class="schedule-cell" id="TU-14-16"></td>
+                        <td class="schedule-cell" id="TU-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">چهارشنبه</td>
+                        <td class="schedule-cell" id="WE-8-10"></td>
+                        <td class="schedule-cell" id="WE-10-12"></td>
+                        <td class="schedule-cell" id="WE-12-14"></td>
+                        <td class="schedule-cell" id="WE-14-16"></td>
+                        <td class="schedule-cell" id="WE-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col">پنج‌شنبه</td>
+                        <td class="schedule-cell" id="TH-8-10"></td>
+                        <td class="schedule-cell" id="TH-10-12"></td>
+                        <td class="schedule-cell" id="TH-12-14"></td>
+                        <td class="schedule-cell" id="TH-14-16"></td>
+                        <td class="schedule-cell" id="TH-16-18"></td>
+                    </tr>
+                    <tr>
+                        <td class="day-col" style="color: #dc3545;">جمعه</td>
+                        <td class="schedule-cell" id="FR-8-10"></td>
+                        <td class="schedule-cell" id="FR-10-12"></td>
+                        <td class="schedule-cell" id="FR-12-14"></td>
+                        <td class="schedule-cell" id="FR-14-16"></td>
+                        <td class="schedule-cell" id="FR-16-18"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div data-include="../partials/footer.html"></div>
+    <script src="../js/layout.js"></script>
+    <script src="../js/instructor-schedule.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,107 @@
+/* ۱. استایل بخش جستجو */
+
+#search-section {
+    padding: 15px;
+    background-color: var(--light, #f8f9fa);
+    /* استفاده از رنگ روشن برای پس زمینه */
+    border: 1px solid var(--gray-400, #ced4da);
+    /* یک خاکستری روشن برای border */
+    margin-bottom: 25px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+#course-search {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 1px solid var(--gray-400, #ced4da);
+    border-radius: 4px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#course-search:focus {
+    border-color: var(--primary, #007bff);
+    /* هنگام فوکوس، رنگ اصلی را نمایش بده */
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* ۲. استایل جدول دروس */
+
+#course-list-container {
+    overflow-x: auto;
+    /* برای جداولی که در صفحه موبایل جا نمی‌شوند */
+}
+
+.course-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+/* استایل سربرگ جدول */
+.course-table thead th {
+    background-color: var(--primary, #007bff);
+    /* رنگ اصلی (آبی) برای سربرگ */
+    color: var(--white, #fff);
+    border: 1px solid var(--primary, #007bff);
+    padding: 12px;
+    text-align: right;
+    font-weight: bold;
+}
+
+/* استایل سلول‌های بدنه جدول */
+.course-table tbody td {
+    border: 1px solid var(--light, #f8f9fa);
+    padding: 12px;
+    text-align: right;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+/* رنگ آمیزی سطرهای زوج (Alternate Row Coloring) */
+.course-table tbody tr:nth-child(even) {
+    background-color: var(--light, #f8f9fa);
+}
+
+.course-table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    /* هایلایت کم‌رنگ هنگام Hover */
+}
+
+
+/* ۳. استایل دکمه اخذ درس */
+
+.register-btn {
+    /* استفاده از رنگ موفقیت (سبز) برای دکمه عملیات مثبت */
+    background-color: var(--success, #28a745);
+    color: var(--white, #fff);
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.register-btn:hover {
+    background-color: #218838;
+    /* کمی تیره‌تر از success */
+}
+
+.register-btn:disabled {
+    background-color: var(--gray, #6c757d);
+    cursor: not-allowed;
+}
+
+/* ۴. پیام بدون نتیجه */
+
+#no-results {
+    padding: 20px;
+    text-align: center;
+    color: var(--secondary, #6c757d);
+    font-size: 1.1rem;
+    border: 1px dashed var(--light, #f8f9fa);
+    margin-top: 20px;
+}

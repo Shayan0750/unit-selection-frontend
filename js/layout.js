@@ -1,40 +1,96 @@
-(function(){
+(function () {
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
 
-  async function loadIncludes(){
+  // 1. تشخیص فایل سایدبار بر اساس نقش کاربر
+  function getSidebarPath() {
+    const role = (localStorage.getItem('role') || 'guest').toLowerCase();
+    // فرض بر این است که فایل‌های سایدبار در پوشه partials هستند
+    switch (role) {
+      case 'admin': return '../partials/admin-sidebar.html';
+      case 'instructor': return '../partials/instructor-sidebar.html';
+      case 'student': return '../partials/student-sidebar.html';
+      default: return '../partials/sidebar.html';
+    }
+  }
+
+  // 2. بارگذاری include ها با مدیریت سایدبار پویا
+  async function loadIncludes() {
     const nodes = $$('[data-include]');
+
+    // پیدا کردن نگهدارنده سایدبار و تنظیم مسیر داینامیک آن
+    const sidebarPlaceholder = $('#sidebar-container');
+    if (sidebarPlaceholder) {
+      sidebarPlaceholder.dataset.include = getSidebarPath();
+    }
+
     await Promise.all(nodes.map(async node => {
       try {
-        const res = await fetch(node.dataset.include);
-        node.innerHTML = res.ok ? await res.text() : `<!-- include failed: ${res.status} ${node.dataset.include} -->`;
+        const path = node.dataset.include;
+        if (!path) return;
+
+        const res = await fetch(path);
+        if (res.ok) {
+          node.innerHTML = await res.text();
+        } else {
+          node.innerHTML = ``;
+        }
       } catch (err) {
-        node.innerHTML = `<!-- include failed: ${err.message} -->`;
+        node.innerHTML = ``;
       }
     }));
+
     initParts();
   }
 
-  function initParts(){
-    const file = (location.pathname.split('/').pop() || 'dashboard.html');
-    const name = file.replace('.html','');
+  // 3. تنظیم اجزای ثابت پس از بارگذاری HTML
+  function initParts() {
+    const file = (location.pathname.split('/').pop() || 'index.html');
+    const name = file.replace('.html', '');
 
-    // mark active link (tries data-link first, then href)
+    // هایلایت کردن لینک فعال در سایدبار تازه بارگذاری شده
     $$('.sidebar a').forEach(a => {
-      const linkName = a.dataset.link || a.getAttribute('href') || '';
-      a.classList.toggle('active', linkName === name || linkName === file);
+      const href = a.getAttribute('href') || '';
+      if (href.includes(file)) {
+        a.classList.add('active');
+      }
     });
 
-    // sidebar toggle
+    // سوییچ باز و بسته شدن سایدبار (Mobile Friendly)
     const toggle = $('#toggleSidebar') || $('.menu-toggle');
-    const sidebar = $('#sidebar') || $('#sidebarFragment') || $('.sidebar');
-    if (toggle && sidebar) toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+    const sidebar = $('#sidebar') || $('.sidebar');
+    if (toggle && sidebar) {
+      toggle.onclick = () => sidebar.classList.toggle('open');
+    }
 
-    // logout (placeholder)
-    const logout = $('#logoutBtn');
-    if (logout) logout.addEventListener('click', () => console.log('logout clicked (implement auth/logout logic)'));
+    // مدیریت دکمه خروج
+    const logout = $('#logoutBtn') || $('#logout-btn');
+    if (logout) {
+      logout.onclick = (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '../login.html';
+      };
+    }
+
+    updateUserRoleLabel();
+  }
+
+  // مدیریت نمایش نقش کاربر در Header
+  function updateUserRoleLabel() {
+    const role = (localStorage.getItem('role') || '').toLowerCase();
+    const roleLabel = $('#userRoleLabel');
+    if (!roleLabel) return;
+
+    const roleMap = {
+      'student': 'دانشجو',
+      'instructor': 'استاد',
+      'admin': 'مدیر سیستم'
+    };
+    roleLabel.textContent = roleMap[role] || 'کاربر';
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadIncludes);
   else loadIncludes();
+
 })();
