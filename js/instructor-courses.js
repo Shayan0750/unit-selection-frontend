@@ -91,8 +91,8 @@
                     <tr>
                         <td>${index + 1}</td>
                         <td>${st.f_name} ${st.l_name}</td>
-                        <td>${st.email || '-'}</td>
-                        <td>${st.id}</td>
+                        <!-- <td>${st.email || '-'}</td> -->
+                        <!-- <td>${st.id}</td> -->
                         <td>${date}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-danger btn-remove" 
@@ -121,8 +121,8 @@
                             <tr>
                                 <th style="width:50px">#</th>
                                 <th>نام و نام‌خانوادگی</th>
-                                <th>ایمیل</th>
-                                <th>شماره دانشجویی</th>
+                                <!-- <th>ایمیل</th> -->
+                                <!-- <th>شماره دانشجویی</th> -->
                                 <th>تاریخ ثبت</th>
                                 <th>عملیات</th>
                             </tr>
