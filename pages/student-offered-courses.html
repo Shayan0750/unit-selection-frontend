@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title> دروس ارائه شده </title>
+    <title>دروس ارائه شده</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/student.css">
 </head>
@@ -11,31 +11,40 @@
 <body>
 
     <div data-include="../partials/header.html"></div>
-    <div id="sidebar-container" data-include=""></div>
+    <div id="sidebar-container" data-include="../partials/sidebar.html"></div>
 
     <main class="main">
-        <h2> دروس ارائه شده نیمسال</h2>
+        <h2>دروس ارائه شده</h2>
 
-        <div id="search-section">
-            <input type="text" id="course-search" placeholder="جستجو (بر اساس کد درس یا نام استاد)...">
+        <!-- فیلد انتخاب نیمسال شیک -->
+        <div id="term-select-container" style="margin-bottom: 20px;">
+            <label for="termSelect" style="margin-right: 10px; font-weight: bold;">انتخاب نیمسال:</label>
+            <select id="termSelect" class="form-control" style="max-width: 250px; display: inline-block;"></select>
         </div>
 
+        <!-- فیلد جستجو -->
+        <div id="search-section" style="margin-bottom: 15px;">
+            <input type="text" id="course-search" placeholder="جستجو (کد درس یا نام استاد)..."
+                   class="form-control" style="max-width: 400px; display: inline-block;">
+        </div>
+
+        <!-- جدول سکشن‌ها -->
         <div id="course-list-container" class="card">
             <table class="course-table">
                 <thead>
                     <tr>
-                        <th>درس</th>
-                        <th>استاد</th>
-                        <th>نیمسال</th>
+                        <th>کد درس</th>
+                        <th>نام درس</th>
+                        <th>شماره گروه</th>
+                        <th>نام استاد</th>
                         <th>ظرفیت</th>
                         <th>زمان‌بندی (روز / ساعت / کلاس)</th>
                     </tr>
                 </thead>
-                <tbody id="sections-table-body">
-                </tbody>
+                <tbody id="sections-table-body"></tbody>
             </table>
             <p id="no-results" style="display: none; text-align: center; color: gray; margin-top: 15px;">
-                موردی یافت نشد.
+                برای این نیمسال درسی ارائه نشده است.
             </p>
         </div>
     </main>
